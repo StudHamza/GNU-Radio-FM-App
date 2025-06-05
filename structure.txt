@@ -1,0 +1,178 @@
+Directory Structure, proposed by Claude Ai
+
+fm-receiver-app/
+│
+├── README.md
+├── LICENSE
+├── requirements.txt
+├── setup.py
+├── .gitignore
+├── pyproject.toml
+│
+├── docs/                           # Documentation
+│   ├── installation.md
+│   ├── user_guide.md
+│   ├── developer_guide.md
+│   ├── gnu_radio_integration.md
+│   └── images/
+│       ├── screenshots/
+│       └── diagrams/
+│
+├── flowgraphs/                     # GNU Radio Companion files
+│   ├── fm_receiver_basic.grc
+│   ├── fm_receiver_rds.grc
+│   ├── spectrum_scanner.grc
+│   ├── audio_processor.grc
+│   └── generated/                  # Generated Python files
+│       ├── fm_receiver_basic.py
+│       ├── fm_receiver_rds.py
+│       ├── spectrum_scanner.py
+│       └── audio_processor.py
+│
+├── src/                           # Main application source
+│   └── fm_receiver/
+│       ├── __init__.py
+│       ├── main.py                # Application entry point
+│       ├── app.py                 # Main application class
+│       │
+│       ├── gui/                   # GUI components
+│       │   ├── __init__.py
+│       │   ├── main_window.py     # Main application window
+│       │   ├── control_panel.py   # Frequency/volume controls
+│       │   ├── spectrum_widget.py # Spectrum analyzer display
+│       │   ├── rds_panel.py       # RDS information display
+│       │   ├── preset_manager.py  # Station presets
+│       │   ├── settings_dialog.py # Configuration dialog
+│       │   └── widgets/           # Custom widgets
+│       │       ├── __init__.py
+│       │       ├── frequency_dial.py
+│       │       ├── signal_meter.py
+│       │       ├── spectrum_plot.py
+│       │       └── audio_visualizer.py
+│       │
+│       ├── core/                  # Core functionality
+│       │   ├── __init__.py
+│       │   ├── radio_controller.py # Interface to GNU Radio
+│       │   ├── rds_decoder.py     # RDS data processing
+│       │   ├── spectrum_analyzer.py
+│       │   ├── audio_manager.py   # Audio output handling
+│       │   ├── station_scanner.py # Auto-scan functionality
+│       │   └── config_manager.py  # Settings persistence
+│       │
+│       ├── utils/                 # Utility modules
+│       │   ├── __init__.py
+│       │   ├── frequency_utils.py # Frequency calculations
+│       │   ├── signal_processing.py
+│       │   ├── file_utils.py
+│       │   └── logging_config.py
+│       │
+│       └── resources/             # Static resources
+│           ├── __init__.py
+│           ├── icons/
+│           │   ├── play.png
+│           │   ├── stop.png
+│           │   ├── scan.png
+│           │   └── settings.png
+│           ├── styles/
+│           │   ├── dark_theme.qss
+│           │   └── light_theme.qss
+│           └── presets/
+│               └── default_stations.json
+│
+├── tests/                         # Test suite
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_radio_controller.py
+│   ├── test_rds_decoder.py
+│   ├── test_spectrum_analyzer.py
+│   ├── test_gui_components.py
+│   └── integration/
+│       ├── __init__.py
+│       └── test_full_workflow.py
+│
+├── scripts/                       # Build and utility scripts
+│   ├── build_flowgraphs.py       # Regenerate Python from GRC
+│   ├── package_app.py            # Create distributable package
+│   ├── install_dependencies.sh   # System dependencies installer
+│   └── run_tests.py
+│
+├── examples/                      # Example configurations
+│   ├── beginner_setup.py
+│   ├── advanced_config.py
+│   └── sdr_configurations/
+│       ├── rtl_sdr.json
+│       ├── hackrf.json
+│       └── usrp.json
+│
+├── packaging/                     # Distribution files
+│   ├── windows/
+│   │   ├── installer.nsi         # NSIS installer script
+│   │   └── app.spec              # PyInstaller spec
+│   ├── linux/
+│   │   ├── fm-receiver.desktop
+│   │   └── debian/
+│   └── macos/
+│       └── Info.plist
+│
+└── data/                         # Sample data and configs
+    ├── sample_recordings/
+    ├── test_signals/
+    └── default_config.json
+
+
+
+
+
+
+
+
+
+
+AI notes 
+Key Files Description
+Core Application Files
+
+src/fm_receiver/main.py: Application entry point with argument parsing
+src/fm_receiver/app.py: Main application class coordinating GUI and radio backend
+src/fm_receiver/gui/main_window.py: Primary GUI window with all major components
+
+GNU Radio Integration
+
+flowgraphs/: GNU Radio Companion (.grc) files for different receiver configurations
+flowgraphs/generated/: Python files generated from GRC files
+src/fm_receiver/core/radio_controller.py: Interface layer between GUI and GNU Radio
+
+GUI Components
+
+gui/control_panel.py: Frequency tuning, volume, and basic controls
+gui/spectrum_widget.py: Real-time spectrum display
+gui/rds_panel.py: RDS information display (station name, song info, etc.)
+gui/widgets/: Custom widgets for professional appearance
+
+Configuration Files
+
+requirements.txt: Python dependencies
+setup.py: Installation configuration
+pyproject.toml: Modern Python project configuration
+data/default_config.json: Default application settings
+
+Build System
+
+scripts/build_flowgraphs.py: Automatically regenerate Python from GRC files
+scripts/package_app.py: Create distributable packages for different platforms
+
+Recommended Dependencies (requirements.txt)
+PyQt6>=6.4.0
+numpy>=1.21.0
+scipy>=1.7.0
+matplotlib>=3.5.0
+pyqtgraph>=0.12.0
+gnuradio>=3.10.0
+This structure provides:
+
+Clear separation between GUI and radio logic
+Easy integration with GNU Radio generated code
+Comprehensive testing framework
+Cross-platform packaging support
+Beginner-friendly examples and documentation
+Professional application architecture

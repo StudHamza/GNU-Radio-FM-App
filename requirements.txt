@@ -1,0 +1,4 @@
+QtPy>=2.3.0
+PyQt5>=5.15.0
+numpy>=1.21.0
+matplotlib>=3.5.0
