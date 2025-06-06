@@ -1,121 +1,183 @@
 """
-Main Application Window
+Modern FM Radio Main Window - Dark Theme UI
 """
 import logging
-from qtpy.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, 
-                           QHBoxLayout, QMenuBar, QStatusBar, QAction)
-from qtpy.QtCore import Qt
-from .control_panel import ControlPanel
-from .spectrum_widget import SpectrumWidget
-from .rds_panel import RDSPanel
+from qtpy.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout)
+from .sidebar import Sidebar
+from .station_list import StationList
+from .media_player import MediaPlayer
 
 logger = logging.getLogger(__name__)
 
 class MainWindow(QMainWindow):
-    """Main application window"""
+    """Modern FM Radio Main Window"""
     
     def __init__(self, config):
         super().__init__()
         self.config = config
+        # self.setup_dark_theme()
         self.setup_ui()
-        self.setup_menu()
-        self.setup_status_bar()
-        
-        # Load window settings
         self.load_settings()
-        
-        logger.info("Main window created")
+        logger.info("Modern FM Radio UI created")
+    
+    def setup_dark_theme(self):
+        """Setup dark theme styling"""
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #1a1a1a;
+                color: #ffffff;
+            }
+            QWidget {
+                background-color: #1a1a1a;
+                color: #ffffff;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QScrollArea {
+                border: none;
+                background-color: #2d2d2d;
+            }
+            QScrollBar:vertical {
+                background-color: #3d3d3d;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #5d5d5d;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #7d7d7d;
+            }
+        """)
     
     def setup_ui(self):
         """Setup the main user interface"""
-        self.setWindowTitle("FM Receiver - GNU Radio Demo")
-        self.setMinimumSize(800, 600)
+        self.setWindowTitle("GNU Radio FM Receiver")
+        self.setMinimumSize(1200, 700)
+        self.resize(1400, 800)
+        
         
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
-        # Main layout
-        main_layout = QVBoxLayout(central_widget)
+        # Main horizontal layout
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
         
-        # Top section: Controls and RDS
-        top_layout = QHBoxLayout()
+        # Left sidebar
+        self.sidebar = Sidebar()
+        self.sidebar.setFixedWidth(200)
+        main_layout.addWidget(self.sidebar)
         
-        # Control panel (left side)
-        self.control_panel = ControlPanel(self.config)
-        top_layout.addWidget(self.control_panel)
+        # Right content area
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
         
-        # RDS panel (right side)
-        self.rds_panel = RDSPanel()
-        top_layout.addWidget(self.rds_panel)
+        # Station list area
+        self.station_list = StationList()
+        content_layout.addWidget(self.station_list)
         
-        main_layout.addLayout(top_layout)
+        # Bottom media player
+        self.media_player = MediaPlayer()
+        self.media_player.setFixedHeight(100)
+        content_layout.addWidget(self.media_player)
         
-        # Bottom section: Spectrum analyzer
-        self.spectrum_widget = SpectrumWidget()
-        main_layout.addWidget(self.spectrum_widget)
+        content_widget = QWidget()
+        content_widget.setLayout(content_layout)
+        main_layout.addWidget(content_widget)
         
         # Connect signals
-        self.control_panel.frequency_changed.connect(self.on_frequency_changed)
-        self.control_panel.volume_changed.connect(self.on_volume_changed)
-    
-    def setup_menu(self):
-        """Setup application menu"""
-        menubar = self.menuBar()
+        self.sidebar.home_clicked.connect(self.show_home)
+        self.sidebar.fft_clicked.connect(self.show_fft)
+        self.sidebar.debug_clicked.connect(self.show_debug)
+        self.sidebar.settings_clicked.connect(self.show_settings)
         
-        # File menu
-        file_menu = menubar.addMenu('&File')
-        
-        exit_action = QAction('&Exit', self)
-        exit_action.setShortcut('Ctrl+Q')
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
-        
-        # Tools menu
-        tools_menu = menubar.addMenu('&Tools')
-        
-        scan_action = QAction('&Scan Stations', self)
-        scan_action.setShortcut('Ctrl+S')
-        scan_action.triggered.connect(self.scan_stations)
-        tools_menu.addAction(scan_action)
-    
-    def setup_status_bar(self):
-        """Setup status bar"""
-        self.status_bar = self.statusBar()
-        self.status_bar.showMessage("Ready")
+        self.station_list.station_selected.connect(self.on_station_selected)
+        self.media_player.play_clicked.connect(self.toggle_playback)
     
     def load_settings(self):
-        """Load window settings from config"""
-        # Load last frequency, volume, etc.
-        frequency = self.config.get('last_frequency', 88.5)
-        volume = self.config.get('last_volume', 50)
+        """Load application settings"""
+        # Load mock stations
+        mock_stations = [
+            {
+                'frequency': 94.5,
+                'name': '94.5 FM RDS information',
+                'artist': 'Pritam, Mohit Chauhan, Sandeep Shrivastava',
+                'song': 'Tune Jo Na Kaha',
+                'image': 'station1.jpg'
+            },
+            {
+                'frequency': 96.3,
+                'name': '96.3 Classic Rock',
+                'artist': 'Led Zeppelin',
+                'song': 'Stairway to Heaven',
+                'image': 'station2.jpg'
+            },
+            {
+                'frequency': 98.7,
+                'name': '98.7 Jazz FM',
+                'artist': 'Miles Davis',
+                'song': 'Kind of Blue',
+                'image': 'station3.jpg'
+            },
+            {
+                'frequency': 101.1,
+                'name': '101.1 Pop Hits',
+                'artist': 'Taylor Swift',
+                'song': 'Anti-Hero',
+                'image': 'station4.jpg'
+            },
+            {
+                'frequency': 103.5,
+                'name': '103.5 News Radio',
+                'artist': 'BBC News',
+                'song': 'World Service',
+                'image': 'station5.jpg'
+            }
+        ]
         
-        self.control_panel.set_frequency(frequency)
-        self.control_panel.set_volume(volume)
-    
-    def on_frequency_changed(self, frequency):
-        """Handle frequency change"""
-        logger.info(f"Frequency changed to: {frequency} MHz")
-        self.status_bar.showMessage(f"Tuned to {frequency} MHz")
-        self.config.set('last_frequency', frequency)
+        self.station_list.load_stations(mock_stations)
         
-        # Update RDS with mock data
-        self.rds_panel.update_station_info(f"Station {frequency}")
+        # Set first station as current
+        if mock_stations:
+            self.media_player.set_current_track(mock_stations[0])
     
-    def on_volume_changed(self, volume):
-        """Handle volume change"""
-        logger.info(f"Volume changed to: {volume}%")
-        self.config.set('last_volume', volume)
+    def show_home(self):
+        """Show home view"""
+        logger.info("Home clicked")
+        self.station_list.show()
     
-    def scan_stations(self):
-        """Start station scanning"""
-        logger.info("Starting station scan")
-        self.status_bar.showMessage("Scanning for stations...")
-        # This would start the actual scanning process
+    def show_fft(self):
+        """Show FFT spectrum analyzer"""
+        logger.info("FFT clicked")
+        # This would switch to spectrum view
+    
+    def show_debug(self):
+        """Show debug mode"""
+        logger.info("Debug mode clicked")
+        # This would show debug information
+    
+    def show_settings(self):
+        """Show settings dialog"""
+        logger.info("Settings clicked")
+        # This would open settings dialog
+    
+    def on_station_selected(self, station_data):
+        """Handle station selection"""
+        logger.info(f"Station selected: {station_data['name']}")
+        self.media_player.set_current_track(station_data)
+    
+    def toggle_playback(self):
+        """Toggle play/pause"""
+        logger.info("Playback toggled")
+        # This would control actual playback
     
     def closeEvent(self, event):
         """Handle window close event"""
-        # Save settings before closing
         self.config.save()
         logger.info("Application closing")
         event.accept()

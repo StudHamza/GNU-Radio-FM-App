@@ -19,12 +19,6 @@ class FMReceiverApp:
         
         # Create main window
         self.main_window = MainWindow(self.config)
-
-        
-        # Setup periodic updates (simulate real-time data)
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self._update_display)
-        self.update_timer.start(100)  # Update every 100ms
         
         logger.info("FM Receiver Application initialized successfully")
     
@@ -32,7 +26,3 @@ class FMReceiverApp:
         """Show the main window"""
         self.main_window.show()
     
-    def _update_display(self):
-        """Update display elements (placeholder for real data)"""
-        # This would normally update spectrum, signal strength, etc.
-        pass
