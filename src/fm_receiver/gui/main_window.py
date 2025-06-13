@@ -23,7 +23,9 @@ class MainWindow(QMainWindow):
         self.flowgraph = False
         self.simple_fm_receiver = simple_fm_receiver()
         self.current_station_freq =  87.9*10**6
-        self.stations = [88.9*10**6,90.7*10**6,89500000]
+        self.stations = [88700000,89500000,89900000,90900000,92100000,92500000,92700000,93700000]
+
+        # Qt Variables 
 
         # Setup UI
         self.setup_ui()
@@ -67,13 +69,8 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(content_area_widget)
         self.main_layout.addWidget(self.bottom_menu_widget)
 
-
-    def closeEvent(self, event):
-        """Handle window close event"""
-        logger.info("Application closing")
-        event.accept()
-
     def create_bottom_menu(self):
+        """This function creates the bottom menu tabs and connects them with appropriate functions"""
         self.bottom_menu_widget = QWidget()
         bottom_menu_layout = QHBoxLayout()
 
@@ -92,6 +89,7 @@ class MainWindow(QMainWindow):
         self.bottom_menu_widget.setLayout(bottom_menu_layout)
 
     def create_stations(self):
+        """This funcion creates the stations widnow and displays the a list of stations"""
         self.stations_widget = QWidget()
         layout = QVBoxLayout()
 
@@ -116,20 +114,15 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         
         # Data
-        self.title= QLabel(f"{self.current_station_freq/10**6} FM")
-        self.title.setAlignment(Qt.AlignCenter)
+        self.freq_label= QLabel(f"{self.current_station_freq/10**6} FM")
+        self.freq_label.setAlignment(Qt.AlignCenter)
         self.btn = QPushButton("Listen")
         self.btn.setCheckable(True)
         self.btn.clicked.connect(self.fm_player)   
 
-        # Range 
-        self._freq_range = Range(87.9*10**6, 107.9*10**6, 200*10**3, 87.9*10**6, 200)
-        self._freq_win = RangeWidget(self._freq_range, self.set_freq, "'freq'", "counter_slider", float, Qt.Horizontal)
-
         # Add widgets to layout
-        layout.addWidget(self.title)
+        layout.addWidget(self.freq_label)
         layout.addWidget(self.btn)
-        layout.addWidget(self._freq_win)
         layout.addStretch()  # Push everything to top
         self.home_widget.setLayout(layout)
 
@@ -146,13 +139,23 @@ class MainWindow(QMainWindow):
             self.simple_fm_receiver.start()
             self.flowgraph=True
     
+
+    def change_channel(self):
+
+        btn = self.sender()
+        self.set_freq(btn.property("freq"))
+
+
     def set_freq(self, freq):
+        
+        self.freq_label.setText(f"{freq/10**6} FM")
         self.simple_fm_receiver.set_freq(freq)
         self.current_station_freq = freq
 
-    def change_channel(self):
-        btn = self.sender()
-        self.current_station_freq = btn.property("freq")
-        self.title.setText(btn.text())
-        self._freq_win
-        self.set_freq(self.current_station_freq)
+    
+    def closeEvent(self, event):
+        """Handle window close event"""
+        logger.info("Application closing")
+        event.accept()
+
+
