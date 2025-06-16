@@ -33,6 +33,18 @@ options:
     state: enabled
 
 blocks:
+- name: fft_size
+  id: variable
+  parameters:
+    comment: ''
+    value: '1024'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [544, 12.0]
+    rotation: 0
+    state: enabled
 - name: freq
   id: variable
   parameters:
@@ -44,7 +56,28 @@ blocks:
     bus_structure: null
     coordinate: [296, 12.0]
     rotation: 0
-    state: enabled
+    state: disabled
+- name: freq
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: freq
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: 88.7*10**6
+    step: 200*1000
+    stop: 107.9*10**6
+    value: 88.7*10**6
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [400, 12.0]
+    rotation: 0
+    state: true
 - name: samp_rate
   id: variable
   parameters:
@@ -71,9 +104,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [752, 468.0]
+    coordinate: [608, 460.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: audio_sink_0
   id: audio_sink
   parameters:
@@ -88,185 +121,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [960, 476.0]
-    rotation: 0
-    state: true
-- name: qtgui_freq_sink_x_0
-  id: qtgui_freq_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'False'
-    average: '1.0'
-    axislabels: 'True'
-    bw: samp_rate
-    color1: '"blue"'
-    color10: '"dark blue"'
-    color2: '"red"'
-    color3: '"green"'
-    color4: '"black"'
-    color5: '"cyan"'
-    color6: '"magenta"'
-    color7: '"yellow"'
-    color8: '"dark red"'
-    color9: '"dark green"'
-    comment: ''
-    ctrlpanel: 'False'
-    fc: freq
-    fftsize: '1024'
-    freqhalf: 'True'
-    grid: 'False'
-    gui_hint: ''
-    label: Relative Gain
-    label1: ''
-    label10: ''''''
-    label2: ''''''
-    label3: ''''''
-    label4: ''''''
-    label5: ''''''
-    label6: ''''''
-    label7: ''''''
-    label8: ''''''
-    label9: ''''''
-    legend: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '""'
-    nconnections: '1'
-    norm_window: 'False'
-    showports: 'False'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_tag: '""'
-    type: complex
-    units: dB
-    update_time: '0.10'
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    wintype: window.WIN_BLACKMAN_hARRIS
-    ymax: '10'
-    ymin: '-140'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [632, 172.0]
-    rotation: 0
-    state: enabled
-- name: qtgui_time_sink_x_0
-  id: qtgui_time_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'True'
-    axislabels: 'True'
-    color1: blue
-    color10: dark blue
-    color2: red
-    color3: green
-    color4: black
-    color5: cyan
-    color6: magenta
-    color7: yellow
-    color8: dark red
-    color9: dark green
-    comment: ''
-    ctrlpanel: 'False'
-    entags: 'True'
-    grid: 'False'
-    gui_hint: ''
-    label1: Signal 1
-    label10: Signal 10
-    label2: Signal 2
-    label3: Signal 3
-    label4: Signal 4
-    label5: Signal 5
-    label6: Signal 6
-    label7: Signal 7
-    label8: Signal 8
-    label9: Signal 9
-    legend: 'True'
-    marker1: '-1'
-    marker10: '-1'
-    marker2: '-1'
-    marker3: '-1'
-    marker4: '-1'
-    marker5: '-1'
-    marker6: '-1'
-    marker7: '-1'
-    marker8: '-1'
-    marker9: '-1'
-    name: '""'
-    nconnections: '1'
-    size: '1024'
-    srate: samp_rate
-    stemplot: 'False'
-    style1: '1'
-    style10: '1'
-    style2: '1'
-    style3: '1'
-    style4: '1'
-    style5: '1'
-    style6: '1'
-    style7: '1'
-    style8: '1'
-    style9: '1'
-    tr_chan: '0'
-    tr_delay: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_slope: qtgui.TRIG_SLOPE_POS
-    tr_tag: '""'
-    type: complex
-    update_time: '0.10'
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    ylabel: Amplitude
-    ymax: '1'
-    ymin: '-1'
-    yunit: '""'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [632, 92.0]
+    coordinate: [904, 468.0]
     rotation: 0
     state: enabled
 - name: rational_resampler_xxx_0
@@ -286,9 +141,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [528, 452.0]
+    coordinate: [352, 444.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: soapy_rtlsdr_source_0
   id: soapy_rtlsdr_source
   parameters:
@@ -308,15 +163,13 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [344, 308.0]
+    coordinate: [104, 300.0]
     rotation: 0
-    state: true
+    state: enabled
 
 connections:
 - [analog_wfm_rcv_0, '0', audio_sink_0, '0']
 - [rational_resampler_xxx_0, '0', analog_wfm_rcv_0, '0']
-- [soapy_rtlsdr_source_0, '0', qtgui_freq_sink_x_0, '0']
-- [soapy_rtlsdr_source_0, '0', qtgui_time_sink_x_0, '0']
 - [soapy_rtlsdr_source_0, '0', rational_resampler_xxx_0, '0']
 
 metadata:

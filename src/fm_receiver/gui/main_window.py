@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
                             QButtonGroup, QSizePolicy)
 from PyQt5.QtCore import Qt
 from flowgraphs.simple_fm_receiver import simple_fm_receiver
+from flowgraphs.rds_rx import rds_rx
 from gnuradio.qtgui import Range, RangeWidget
 
 logger = logging.getLogger(__name__)
@@ -22,9 +23,21 @@ class MainWindow(QMainWindow):
 
         # Variables
         self.flowgraph = False
-        self.simple_fm_receiver = simple_fm_receiver()
-        self.current_station_freq = 87.9*10**6
-        self.stations = [88700000,89500000,89900000,90900000,92100000,92500000,92700000,93700000]
+
+        #self.simple_fm_receiver = simple_fm_receiver()
+        self.rds_fm_receiver = rds_rx()
+        self.fm_receiver = self.rds_fm_receiver
+    
+        self.current_station_freq = 90.9*10**6
+        self.stations = [87900000,88700000,89500000,89900000,90900000,92100000,92500000,92700000,93700000]
+
+        # Sort stations for proper navigation
+        self.stations.sort()
+        self.current_station_index = 0  # Track current station index
+        
+        # FM band range (typical FM band: 88-108 MHz)
+        self.fm_min_freq = 88.0 * 10**6
+        self.fm_max_freq = 108.0 * 10**6
 
         # Setup UI
         self.setup_ui()
@@ -170,6 +183,9 @@ class MainWindow(QMainWindow):
         control_layout = QGridLayout(control_widget)
         control_layout.setSpacing(15)
         
+        # Volume Control
+        self.volume_btn = self.fm_receiver._volume_win
+
         # Listen/Stop button
         self.btn = QPushButton("Listen")
         self.btn.setCheckable(True)
@@ -197,11 +213,14 @@ class MainWindow(QMainWindow):
         self.next_station_btn = QPushButton("Next ▶")
         self.prev_station_btn.setMinimumHeight(40)
         self.next_station_btn.setMinimumHeight(40)
+        self.prev_station_btn.clicked.connect(self.previous_station)
+        self.next_station_btn.clicked.connect(self.next_station)
         
         # RDS info
-        self.rds_info = QLabel("RDS: No Information")
-        self.rds_info.setAlignment(Qt.AlignCenter)
-        self.rds_info.setStyleSheet("font-size: 14px; color: #666;")
+        # self.rds_info = QLabel("RDS: No Information")
+        # self.rds_info.setAlignment(Qt.AlignCenter)
+        # self.rds_info.setStyleSheet("font-size: 14px; color: #666;")
+        self.rds_info = self.fm_receiver.rds_panel_0
         
         # Channel slider placeholder
         self.channel_slider = QLabel("Channel Slider (Coming Soon)")
@@ -209,7 +228,7 @@ class MainWindow(QMainWindow):
         self.channel_slider.setStyleSheet("font-size: 12px; color: #999;")
         
         # Layout arrangement
-        control_layout.addWidget(self.btn, 0, 0, 1, 2)
+        # control_layout.addWidget(self.btn, 0, 0, 1, 2)
         control_layout.addWidget(self.record_btn, 0, 2, 1, 2)
         control_layout.addWidget(self.strength_label, 0, 4, 1, 2)
         
@@ -219,7 +238,8 @@ class MainWindow(QMainWindow):
         
         control_layout.addWidget(self.rds_info, 2, 0, 1, 6)
         control_layout.addWidget(self.channel_slider, 3, 0, 1, 6)
-        
+        control_layout.addWidget(self.volume_btn, 4, 0, 1, 6)
+        control_layout.addWidget(self.btn, 5, 2, 1, 2)
         # Set column stretch to make layout responsive
         for i in range(6):
             control_layout.setColumnStretch(i, 1)
@@ -232,12 +252,12 @@ class MainWindow(QMainWindow):
         """Toggle FM receiver on/off"""
         if self.flowgraph:
             self.btn.setText("Listen")
-            self.simple_fm_receiver.stop()
-            self.simple_fm_receiver.wait()
+            self.fm_receiver.stop()
+            self.fm_receiver.wait()
             self.flowgraph = False
         else: 
             self.btn.setText("Stop Listening")
-            self.simple_fm_receiver.start()
+            self.fm_receiver.start()
             self.flowgraph = True
 
     def change_channel(self):
@@ -253,13 +273,60 @@ class MainWindow(QMainWindow):
     def set_freq(self, freq):
         """Set frequency and update display"""
         self.freq_label.setText(f"{freq/10**6:.1f} FM")
-        self.simple_fm_receiver.set_freq(freq)
+        self.fm_receiver.set_freq(freq/10**6)
         self.current_station_freq = freq
-    
+
+    def previous_station(self):
+        """Navigate to previous station in the list"""
+        if not self.stations:
+            return
+            
+        # Find current station index
+        try:
+            current_index = self.stations.index(int(self.current_station_freq))
+        except ValueError:
+            # Current frequency is not in stations list, find closest lower station
+            current_index = 0
+            for i, station in enumerate(self.stations):
+                if station < self.current_station_freq:
+                    current_index = i
+                else:
+                    break
+        
+        # Move to previous station (wrap around to end if at beginning)
+        previous_index = (current_index - 1) % len(self.stations)
+        previous_freq = self.stations[previous_index]
+        
+        self.set_freq(previous_freq)
+        self.current_station_index = previous_index
+
+    def next_station(self):
+        """Navigate to next station in the list"""
+        if not self.stations:
+            return
+            
+        # Find current station index
+        try:
+            current_index = self.stations.index(int(self.current_station_freq))
+        except ValueError:
+            # Current frequency is not in stations list, find closest higher station
+            current_index = len(self.stations) - 1
+            for i, station in enumerate(self.stations):
+                if station > self.current_station_freq:
+                    current_index = i
+                    break
+        
+        # Move to next station (wrap around to beginning if at end)
+        next_index = (current_index + 1) % len(self.stations)
+        next_freq = self.stations[next_index]
+        
+        self.set_freq(next_freq)
+        self.current_station_index = next_index
+
     def closeEvent(self, event):
         """Handle window close event"""
         if self.flowgraph:
-            self.simple_fm_receiver.stop()
-            self.simple_fm_receiver.wait()
+            self.fm_receiver.stop()
+            self.fm_receiver.wait()
         logger.info("Application closing")
         event.accept()
