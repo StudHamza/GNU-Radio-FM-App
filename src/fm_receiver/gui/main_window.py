@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt
 from flowgraphs.simple_fm_receiver import simple_fm_receiver
 from flowgraphs.rds_rx import rds_rx
 from gnuradio.qtgui import Range, RangeWidget
+from .frequency_slider import FrequencySlider
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +185,7 @@ class MainWindow(QMainWindow):
         control_layout.setSpacing(15)
         
         # Volume Control
-        self.volume_btn = self.fm_receiver._volume_win
+        # self.volume_btn = self.fm_receiver._volume_win
 
         # Listen/Stop button
         self.btn = QPushButton("Listen")
@@ -223,9 +224,11 @@ class MainWindow(QMainWindow):
         self.rds_info = self.fm_receiver.rds_panel_0
         
         # Channel slider placeholder
-        self.channel_slider = QLabel("Channel Slider (Coming Soon)")
-        self.channel_slider.setAlignment(Qt.AlignCenter)
-        self.channel_slider.setStyleSheet("font-size: 12px; color: #999;")
+        self.channel_slider = FrequencySlider(self.current_station_freq/10**6,87.5, 108.0)
+        # self.channel_slider.valueChanged.connect(self.set_freq)
+        # self.channel_slider = QLabel("Channel Slider (Coming Soon)")
+        # self.channel_slider.setAlignment(Qt.AlignCenter)
+        # self.channel_slider.setStyleSheet("font-size: 12px; color: #999;")
         
         # Layout arrangement
         # control_layout.addWidget(self.btn, 0, 0, 1, 2)
@@ -238,8 +241,8 @@ class MainWindow(QMainWindow):
         
         control_layout.addWidget(self.rds_info, 2, 0, 1, 6)
         control_layout.addWidget(self.channel_slider, 3, 0, 1, 6)
-        control_layout.addWidget(self.volume_btn, 4, 0, 1, 6)
-        control_layout.addWidget(self.btn, 5, 2, 1, 2)
+        #control_layout.addWidget(self.volume_btn, 4, 0, 1, 6)
+        control_layout.addWidget(self.btn, 4, 2, 1, 2)
         # Set column stretch to make layout responsive
         for i in range(6):
             control_layout.setColumnStretch(i, 1)
@@ -274,6 +277,7 @@ class MainWindow(QMainWindow):
         """Set frequency and update display"""
         self.freq_label.setText(f"{freq/10**6:.1f} FM")
         self.fm_receiver.set_freq(freq/10**6)
+        self.channel_slider.setValue(freq/10**6)
         self.current_station_freq = freq
 
     def previous_station(self):
