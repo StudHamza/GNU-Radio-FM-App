@@ -9,7 +9,7 @@ options:
     description: ''
     gen_cmake: 'On'
     gen_linking: dynamic
-    generate_options: qt_gui
+    generate_options: no_gui
     hier_block_src_path: '.:'
     id: fm_scanner
     max_nouts: '0'
@@ -19,7 +19,7 @@ options:
     realtime_scheduling: ''
     run: 'True'
     run_command: '{python} -u {filename}'
-    run_options: prompt
+    run_options: run
     sizing_mode: fixed
     thread_safe_setters: ''
     title: Not titled yet
@@ -28,7 +28,7 @@ options:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 8]
+    coordinate: [24, 4.0]
     rotation: 0
     state: enabled
 
@@ -37,81 +37,50 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 2**10
+    value: 2**7
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [456, 12.0]
+    coordinate: [416, 4.0]
     rotation: 0
     state: enabled
 - name: freq
-  id: variable_qtgui_range
+  id: variable
   parameters:
     comment: ''
-    gui_hint: ''
-    label: ''
-    min_len: '200'
-    orient: QtCore.Qt.Horizontal
-    rangeType: float
-    start: 87.7*10**6
-    step: 200*10**3
-    stop: 107.9*10**6
-    value: 87.7*10**6
-    widget: counter_slider
+    value: 87e6
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [296, 12.0]
+    coordinate: [328, 4.0]
     rotation: 0
-    state: true
+    state: enabled
+- name: num_items
+  id: variable
+  parameters:
+    comment: ''
+    value: int(samp_rate*2)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [504, 4.0]
+    rotation: 0
+    state: enabled
 - name: samp_rate
   id: variable
   parameters:
     comment: ''
-    value: '32000'
+    value: 2.048*10**6
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 12]
+    coordinate: [224, 4.0]
     rotation: 0
     state: enabled
-- name: analog_wfm_rcv_0
-  id: analog_wfm_rcv
-  parameters:
-    affinity: ''
-    alias: ''
-    audio_decimation: '4'
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    quad_rate: 48*10**3
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [560, 268.0]
-    rotation: 0
-    state: true
-- name: audio_sink_0
-  id: audio_sink
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    device_name: ''
-    num_inputs: '1'
-    ok_to_block: 'True'
-    samp_rate: '48000'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [832, 276.0]
-    rotation: 0
-    state: true
 - name: blocks_complex_to_mag_squared_0
   id: blocks_complex_to_mag_squared
   parameters:
@@ -125,25 +94,25 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [544, 508.0]
+    coordinate: [912, 204.0]
     rotation: 0
-    state: true
-- name: blocks_nlog10_ff_0
-  id: blocks_nlog10_ff
+    state: enabled
+- name: blocks_head_0
+  id: blocks_head
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    k: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
-    n: '10'
-    vlen: fft_size
+    num_items: num_items
+    type: complex
+    vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [944, 492.0]
+    coordinate: [296, 204.0]
     rotation: 0
     state: true
 - name: blocks_stream_to_vector_0
@@ -161,45 +130,25 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [112, 512.0]
+    coordinate: [488, 208.0]
     rotation: 0
-    state: true
-- name: epy_block_0
-  id: epy_block
+    state: enabled
+- name: blocks_vector_sink_x_0
+  id: blocks_vector_sink_x
   parameters:
-    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
-      \ GRC will instantiate the first class it finds\nto get ports and parameters\
-      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
-      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
-      from gnuradio import gr\n\n\n\nclass blk(gr.sync_block):\n    def __init__(self,\
-      \ threshold_value=0.5, vector_length=1024):\n        \"\"\"\n        Args:\n\
-      \            threshold_value: Threshold below which values are zeroed.\n   \
-      \         vector_length: Length of the float vector.\n        \"\"\"\n     \
-      \   gr.sync_block.__init__(\n            self,\n            name='Vector Threshold',\n\
-      \            in_sig=[(np.float32, vector_length)],\n            out_sig=[(np.float32,\
-      \ vector_length)],\n        )\n        self.threshold = threshold_value\n  \
-      \      self.vector_length = vector_length\n\n    def work(self, input_items,\
-      \ output_items):\n        in0 = input_items[0]\n        out = output_items[0]\n\
-      \n        # Apply thresholding: zero values below threshold\n        out[:]\
-      \ = np.where(in0 >= self.threshold, in0, 0.0)\n\n        return len(output_items[0])\n"
     affinity: ''
     alias: ''
     comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    threshold_value: '-12'
-    vector_length: fft_size
+    reserve_items: num_items
+    type: float
+    vlen: fft_size
   states:
-    _io_cache: '(''Vector Threshold'', ''blk'', [(''threshold_value'', ''0.5''), (''vector_length'',
-      ''1024'')], [(''0'', ''float'', 1024)], [(''0'', ''float'', 1024)], ''\n        Args:\n            threshold_value:
-      Threshold below which values are zeroed.\n            vector_length: Length
-      of the float vector.\n        '', [''vector_length''])'
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1136, 500.0]
+    coordinate: [1112, 204.0]
     rotation: 0
-    state: enabled
+    state: true
 - name: fft_vxx_0
   id: fft_vxx
   parameters:
@@ -218,236 +167,38 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [312, 476.0]
+    coordinate: [680, 172.0]
     rotation: 0
-    state: true
-- name: qtgui_freq_sink_x_1
-  id: qtgui_freq_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'True'
-    average: '0.1'
-    axislabels: 'True'
-    bw: samp_rate
-    color1: '"blue"'
-    color10: '"dark blue"'
-    color2: '"red"'
-    color3: '"green"'
-    color4: '"black"'
-    color5: '"cyan"'
-    color6: '"magenta"'
-    color7: '"yellow"'
-    color8: '"dark red"'
-    color9: '"dark green"'
-    comment: ''
-    ctrlpanel: 'False'
-    fc: '0'
-    fftsize: '1024'
-    freqhalf: 'True'
-    grid: 'False'
-    gui_hint: ''
-    label: Relative Gain
-    label1: ''
-    label10: ''''''
-    label2: ''''''
-    label3: ''''''
-    label4: ''''''
-    label5: ''''''
-    label6: ''''''
-    label7: ''''''
-    label8: ''''''
-    label9: ''''''
-    legend: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '""'
-    nconnections: '1'
-    norm_window: 'False'
-    showports: 'False'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_tag: '""'
-    type: complex
-    units: dB
-    update_time: '0.10'
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    wintype: window.WIN_BLACKMAN_hARRIS
-    ymax: '10'
-    ymin: '-140'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [320, 372.0]
-    rotation: 0
-    state: true
-- name: qtgui_vector_sink_f_0_0
-  id: qtgui_vector_sink_f
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'False'
-    average: '0.05'
-    color1: '"blue"'
-    color10: '"dark blue"'
-    color2: '"red"'
-    color3: '"green"'
-    color4: '"black"'
-    color5: '"cyan"'
-    color6: '"magenta"'
-    color7: '"yellow"'
-    color8: '"dark red"'
-    color9: '"dark green"'
-    comment: ''
-    grid: 'False'
-    gui_hint: ''
-    label1: ''
-    label10: ''
-    label2: ''
-    label3: ''
-    label4: ''
-    label5: ''
-    label6: ''
-    label7: ''
-    label8: ''
-    label9: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '"Custom"'
-    nconnections: '1'
-    ref_level: '0'
-    showports: 'False'
-    update_time: '0.10'
-    vlen: fft_size
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    x_axis_label: '"x-Axis"'
-    x_start: '0'
-    x_step: '1.0'
-    x_units: '""'
-    y_axis_label: '"y-Axis"'
-    y_units: '""'
-    ymax: '0'
-    ymin: '-20'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1328, 476.0]
-    rotation: 0
-    state: true
-- name: rational_resampler_xxx_0
-  id: rational_resampler_xxx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    decim: '32'
-    fbw: '0'
-    interp: '3'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    taps: '[]'
-    type: ccc
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [328, 252.0]
-    rotation: 0
-    state: true
-- name: single_pole_iir_filter_xx_0
-  id: single_pole_iir_filter_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha: '0.1'
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    type: float
-    vlen: fft_size
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [744, 500.0]
-    rotation: 0
-    state: true
+    state: enabled
 - name: soapy_rtlsdr_source_0
   id: soapy_rtlsdr_source
   parameters:
     affinity: ''
-    agc: 'True'
+    agc: 'False'
     alias: ''
     center_freq: freq
     comment: ''
-    dev_args: ''
+    dev_args: 'True'
     freq_correction: '0'
     gain: '20'
     maxoutbuf: '0'
     minoutbuf: '0'
-    samp_rate: 2.048*10**6
+    samp_rate: samp_rate
     type: fc32
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [8, 284.0]
+    coordinate: [96, 188.0]
     rotation: 0
     state: true
 
 connections:
-- [analog_wfm_rcv_0, '0', audio_sink_0, '0']
-- [blocks_complex_to_mag_squared_0, '0', single_pole_iir_filter_xx_0, '0']
-- [blocks_nlog10_ff_0, '0', epy_block_0, '0']
+- [blocks_complex_to_mag_squared_0, '0', blocks_vector_sink_x_0, '0']
+- [blocks_head_0, '0', blocks_stream_to_vector_0, '0']
 - [blocks_stream_to_vector_0, '0', fft_vxx_0, '0']
-- [epy_block_0, '0', qtgui_vector_sink_f_0_0, '0']
 - [fft_vxx_0, '0', blocks_complex_to_mag_squared_0, '0']
-- [rational_resampler_xxx_0, '0', analog_wfm_rcv_0, '0']
-- [single_pole_iir_filter_xx_0, '0', blocks_nlog10_ff_0, '0']
-- [soapy_rtlsdr_source_0, '0', blocks_stream_to_vector_0, '0']
-- [soapy_rtlsdr_source_0, '0', qtgui_freq_sink_x_1, '0']
-- [soapy_rtlsdr_source_0, '0', rational_resampler_xxx_0, '0']
+- [soapy_rtlsdr_source_0, '0', blocks_head_0, '0']
 
 metadata:
   file_format: 1

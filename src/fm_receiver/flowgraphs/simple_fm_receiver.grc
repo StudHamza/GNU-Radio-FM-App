@@ -124,6 +124,35 @@ blocks:
     coordinate: [904, 468.0]
     rotation: 0
     state: enabled
+- name: qtgui_sink_x_0
+  id: qtgui_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    bw: 2.048e6
+    comment: ''
+    fc: freq
+    fftsize: fft_size
+    gui_hint: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '""'
+    plotconst: 'True'
+    plotfreq: 'True'
+    plottime: 'True'
+    plotwaterfall: 'True'
+    rate: '10'
+    showports: 'False'
+    showrf: 'True'
+    type: complex
+    wintype: window.WIN_BLACKMAN_hARRIS
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [352, 316.0]
+    rotation: 0
+    state: true
 - name: rational_resampler_xxx_0
   id: rational_resampler_xxx
   parameters:
@@ -170,6 +199,7 @@ blocks:
 connections:
 - [analog_wfm_rcv_0, '0', audio_sink_0, '0']
 - [rational_resampler_xxx_0, '0', analog_wfm_rcv_0, '0']
+- [soapy_rtlsdr_source_0, '0', qtgui_sink_x_0, '0']
 - [soapy_rtlsdr_source_0, '0', rational_resampler_xxx_0, '0']
 
 metadata:

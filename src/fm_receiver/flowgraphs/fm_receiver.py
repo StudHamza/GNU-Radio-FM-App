@@ -26,11 +26,9 @@ from gnuradio.filter import firdes
 import sip
 from gnuradio import analog
 from gnuradio import audio
-from gnuradio import blocks
-from gnuradio import fft
-from gnuradio.fft import window
 from gnuradio import filter
 from gnuradio import gr
+from gnuradio.fft import window
 import sys
 import signal
 from argparse import ArgumentParser
@@ -108,90 +106,24 @@ class fm_receiver(gr.top_block, Qt.QWidget):
                 decimation=32,
                 taps=[],
                 fractional_bw=0)
-        self.qtgui_vector_sink_f_0 = qtgui.vector_sink_f(
-            fft_size,
-            0,
-            1.0,
-            "x-Axis",
-            "y-Axis",
-            "",
-            1, # Number of inputs
-            None # parent
-        )
-        self.qtgui_vector_sink_f_0.set_update_time(0.10)
-        self.qtgui_vector_sink_f_0.set_y_axis(-140, 10)
-        self.qtgui_vector_sink_f_0.enable_autoscale(False)
-        self.qtgui_vector_sink_f_0.enable_grid(False)
-        self.qtgui_vector_sink_f_0.set_x_axis_units("")
-        self.qtgui_vector_sink_f_0.set_y_axis_units("")
-        self.qtgui_vector_sink_f_0.set_ref_level(0)
-
-        labels = ['', '', '', '', '',
-            '', '', '', '', '']
-        widths = [1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1]
-        colors = ["blue", "red", "green", "black", "cyan",
-            "magenta", "yellow", "dark red", "dark green", "dark blue"]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0]
-
-        for i in range(1):
-            if len(labels[i]) == 0:
-                self.qtgui_vector_sink_f_0.set_line_label(i, "Data {0}".format(i))
-            else:
-                self.qtgui_vector_sink_f_0.set_line_label(i, labels[i])
-            self.qtgui_vector_sink_f_0.set_line_width(i, widths[i])
-            self.qtgui_vector_sink_f_0.set_line_color(i, colors[i])
-            self.qtgui_vector_sink_f_0.set_line_alpha(i, alphas[i])
-
-        self._qtgui_vector_sink_f_0_win = sip.wrapinstance(self.qtgui_vector_sink_f_0.qwidget(), Qt.QWidget)
-        self.top_layout.addWidget(self._qtgui_vector_sink_f_0_win)
-        self.qtgui_freq_sink_x_0 = qtgui.freq_sink_c(
-            2048, #size
+        self.qtgui_sink_x_0 = qtgui.sink_c(
+            fft_size, #fftsize
             window.WIN_BLACKMAN_hARRIS, #wintype
             freq, #fc
-            samp_rate, #bw
+            2.048e6, #bw
             "", #name
-            1,
+            True, #plotfreq
+            True, #plotwaterfall
+            True, #plottime
+            True, #plotconst
             None # parent
         )
-        self.qtgui_freq_sink_x_0.set_update_time(0.10)
-        self.qtgui_freq_sink_x_0.set_y_axis(-140, 10)
-        self.qtgui_freq_sink_x_0.set_y_label('Relative Gain', 'dB')
-        self.qtgui_freq_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
-        self.qtgui_freq_sink_x_0.enable_autoscale(True)
-        self.qtgui_freq_sink_x_0.enable_grid(False)
-        self.qtgui_freq_sink_x_0.set_fft_average(0.2)
-        self.qtgui_freq_sink_x_0.enable_axis_labels(True)
-        self.qtgui_freq_sink_x_0.enable_control_panel(False)
-        self.qtgui_freq_sink_x_0.set_fft_window_normalized(False)
+        self.qtgui_sink_x_0.set_update_time(1.0/10)
+        self._qtgui_sink_x_0_win = sip.wrapinstance(self.qtgui_sink_x_0.qwidget(), Qt.QWidget)
 
+        self.qtgui_sink_x_0.enable_rf_freq(True)
 
-
-        labels = ['', '', '', '', '',
-            '', '', '', '', '']
-        widths = [1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1]
-        colors = ["blue", "red", "green", "black", "cyan",
-            "magenta", "yellow", "dark red", "dark green", "dark blue"]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0]
-
-        for i in range(1):
-            if len(labels[i]) == 0:
-                self.qtgui_freq_sink_x_0.set_line_label(i, "Data {0}".format(i))
-            else:
-                self.qtgui_freq_sink_x_0.set_line_label(i, labels[i])
-            self.qtgui_freq_sink_x_0.set_line_width(i, widths[i])
-            self.qtgui_freq_sink_x_0.set_line_color(i, colors[i])
-            self.qtgui_freq_sink_x_0.set_line_alpha(i, alphas[i])
-
-        self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
-        self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
-        self.fft_vxx_0 = fft.fft_vcc(fft_size, True, window.blackmanharris(1024), True, 1)
-        self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 1024)
-        self.blocks_nlog10_ff_0 = blocks.nlog10_ff(20, fft_size, 0)
-        self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(fft_size)
+        self.top_layout.addWidget(self._qtgui_sink_x_0_win)
         self.audio_sink_0 = audio.sink(48000, '', True)
         self.analog_wfm_rcv_0 = analog.wfm_rcv(
         	quad_rate=4*48*10**3,
@@ -203,13 +135,8 @@ class fm_receiver(gr.top_block, Qt.QWidget):
         # Connections
         ##################################################
         self.connect((self.analog_wfm_rcv_0, 0), (self.audio_sink_0, 0))
-        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.blocks_nlog10_ff_0, 0))
-        self.connect((self.blocks_nlog10_ff_0, 0), (self.qtgui_vector_sink_f_0, 0))
-        self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
-        self.connect((self.fft_vxx_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.analog_wfm_rcv_0, 0))
-        self.connect((self.rational_resampler_xxx_0, 0), (self.blocks_stream_to_vector_0, 0))
-        self.connect((self.rational_resampler_xxx_0, 0), (self.qtgui_freq_sink_x_0, 0))
+        self.connect((self.soapy_rtlsdr_source_0, 0), (self.qtgui_sink_x_0, 0))
         self.connect((self.soapy_rtlsdr_source_0, 0), (self.rational_resampler_xxx_0, 0))
 
 
@@ -226,14 +153,13 @@ class fm_receiver(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate)
 
     def get_freq(self):
         return self.freq
 
     def set_freq(self, freq):
         self.freq = freq
-        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate)
+        self.qtgui_sink_x_0.set_frequency_range(self.freq, 2.048e6)
         self.soapy_rtlsdr_source_0.set_frequency(0, self.freq)
 
     def get_fft_size(self):
