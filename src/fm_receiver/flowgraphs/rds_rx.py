@@ -85,7 +85,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         ##################################################
         self.rrc_taps = rrc_taps = firdes.root_raised_cosine(1.0, 19000,19000/8, 1.0, 151)
         self.freq_offset = freq_offset = 250000
-        self.freq = freq = 90.9
+        self.freq = freq = 88.5
         self.volume = volume = -6
         self.samp_rate = samp_rate = 1920000
         self.rrc_taps_manchester = rrc_taps_manchester = [rrc_taps[n] - rrc_taps[n+8] for n in range(len(rrc_taps)-8)]
@@ -111,7 +111,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
-        self._freq_range = Range(77, 108, 0.1, 90.9, 200)
+        self._freq_range = Range(77, 108, 0.1, 88.5, 200)
         self._freq_win = RangeWidget(self._freq_range, self.set_freq, "Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_grid_layout.addWidget(self._freq_win, 0, 0, 1, 1)
         for r in range(0, 1):
@@ -165,6 +165,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.qtgui_waterfall_sink_x_0.enable_grid(False)
         self.qtgui_waterfall_sink_x_0.enable_axis_labels(True)
 
+        self.qtgui_waterfall_sink_x_0.disable_legend()
 
         self.qtgui_waterfall_sink_x_0.set_plot_pos_half(not False)
 
@@ -192,12 +193,116 @@ class rds_rx(gr.top_block, Qt.QWidget):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
+        self.qtgui_sink_x_0 = qtgui.sink_c(
+            1024, #fftsize
+            window.WIN_BLACKMAN_hARRIS, #wintype
+            freq*1e6 - 250e3, #fc
+            samp_rate, #bw
+            "Spectrum", #name
+            True, #plotfreq
+            True, #plotwaterfall
+            True, #plottime
+            True, #plotconst
+            None # parent
+        )
+        self.qtgui_sink_x_0.set_update_time(1.0/10)
+        self._qtgui_sink_x_0_win = sip.wrapinstance(self.qtgui_sink_x_0.qwidget(), Qt.QWidget)
+
+        self.qtgui_sink_x_0.enable_rf_freq(True)
+
+        self.top_layout.addWidget(self._qtgui_sink_x_0_win)
+        self.qtgui_freq_sink_x_1_0 = qtgui.freq_sink_f(
+            1024, #size
+            window.WIN_BLACKMAN_hARRIS, #wintype
+            freq, #fc
+            samp_rate / (decimation*5), #bw
+            "L+R", #name
+            1,
+            None # parent
+        )
+        self.qtgui_freq_sink_x_1_0.set_update_time(0.10)
+        self.qtgui_freq_sink_x_1_0.set_y_axis(-140, 10)
+        self.qtgui_freq_sink_x_1_0.set_y_label('Relative Gain', 'dB')
+        self.qtgui_freq_sink_x_1_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
+        self.qtgui_freq_sink_x_1_0.enable_autoscale(False)
+        self.qtgui_freq_sink_x_1_0.enable_grid(False)
+        self.qtgui_freq_sink_x_1_0.set_fft_average(1.0)
+        self.qtgui_freq_sink_x_1_0.enable_axis_labels(True)
+        self.qtgui_freq_sink_x_1_0.enable_control_panel(True)
+        self.qtgui_freq_sink_x_1_0.set_fft_window_normalized(False)
+
+
+        self.qtgui_freq_sink_x_1_0.set_plot_pos_half(not False)
+
+        labels = ['', '', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ["blue", "red", "green", "black", "cyan",
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_freq_sink_x_1_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_freq_sink_x_1_0.set_line_label(i, labels[i])
+            self.qtgui_freq_sink_x_1_0.set_line_width(i, widths[i])
+            self.qtgui_freq_sink_x_1_0.set_line_color(i, colors[i])
+            self.qtgui_freq_sink_x_1_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_freq_sink_x_1_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_1_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_freq_sink_x_1_0_win)
+        self.qtgui_freq_sink_x_1 = qtgui.freq_sink_f(
+            1024, #size
+            window.WIN_BLACKMAN_hARRIS, #wintype
+            freq, #fc
+            samp_rate / decimation, #bw
+            "FM Demod", #name
+            1,
+            None # parent
+        )
+        self.qtgui_freq_sink_x_1.set_update_time(0.10)
+        self.qtgui_freq_sink_x_1.set_y_axis(-140, 10)
+        self.qtgui_freq_sink_x_1.set_y_label('Relative Gain', 'dB')
+        self.qtgui_freq_sink_x_1.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
+        self.qtgui_freq_sink_x_1.enable_autoscale(False)
+        self.qtgui_freq_sink_x_1.enable_grid(False)
+        self.qtgui_freq_sink_x_1.set_fft_average(0.1)
+        self.qtgui_freq_sink_x_1.enable_axis_labels(True)
+        self.qtgui_freq_sink_x_1.enable_control_panel(True)
+        self.qtgui_freq_sink_x_1.set_fft_window_normalized(False)
+
+
+        self.qtgui_freq_sink_x_1.set_plot_pos_half(not False)
+
+        labels = ['', '', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ["blue", "red", "green", "black", "cyan",
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_freq_sink_x_1.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_freq_sink_x_1.set_line_label(i, labels[i])
+            self.qtgui_freq_sink_x_1.set_line_width(i, widths[i])
+            self.qtgui_freq_sink_x_1.set_line_color(i, colors[i])
+            self.qtgui_freq_sink_x_1.set_line_alpha(i, alphas[i])
+
+        self._qtgui_freq_sink_x_1_win = sip.wrapinstance(self.qtgui_freq_sink_x_1.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_freq_sink_x_1_win)
         self.qtgui_freq_sink_x_0 = qtgui.freq_sink_c(
             1024, #size
             window.WIN_BLACKMAN_hARRIS, #wintype
-            0, #fc
+            freq, #fc
             samp_rate / decimation, #bw
-            "", #name
+            "Base Band", #name
             1,
             None # parent
         )
@@ -209,7 +314,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.qtgui_freq_sink_x_0.enable_grid(False)
         self.qtgui_freq_sink_x_0.set_fft_average(1.0)
         self.qtgui_freq_sink_x_0.enable_axis_labels(True)
-        self.qtgui_freq_sink_x_0.enable_control_panel(False)
+        self.qtgui_freq_sink_x_0.enable_control_panel(True)
         self.qtgui_freq_sink_x_0.set_fft_window_normalized(False)
 
 
@@ -333,9 +438,10 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.analog_agc_xx_0, 0), (self.digital_symbol_sync_xx_0, 0))
         self.connect((self.analog_fm_deemph_0_0, 0), (self.blocks_multiply_const_vxx_0_0, 0))
         self.connect((self.analog_fm_deemph_0_0_0, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 0))
+        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.freq_xlating_fir_filter_xxx_1_0, 0))
+        self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_freq_sink_x_1, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.rational_resampler_xxx_0, 0))
         self.connect((self.blocks_add_xx_0, 0), (self.analog_fm_deemph_0_0_0, 0))
@@ -357,6 +463,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.fir_filter_xxx_0, 0), (self.analog_pll_refout_cc_0, 0))
         self.connect((self.fir_filter_xxx_1, 0), (self.blocks_add_xx_0, 0))
         self.connect((self.fir_filter_xxx_1, 0), (self.blocks_sub_xx_0, 0))
+        self.connect((self.fir_filter_xxx_1, 0), (self.qtgui_freq_sink_x_1_0, 0))
         self.connect((self.fir_filter_xxx_1_0, 0), (self.blocks_add_xx_0, 1))
         self.connect((self.fir_filter_xxx_1_0, 0), (self.blocks_sub_xx_0, 1))
         self.connect((self.fir_filter_xxx_2, 0), (self.analog_agc_xx_0, 0))
@@ -367,6 +474,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.rational_resampler_xxx_0, 0), (self.fir_filter_xxx_0, 0))
         self.connect((self.rational_resampler_xxx_1, 0), (self.fir_filter_xxx_2, 0))
         self.connect((self.rtlsdr_source_0_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
+        self.connect((self.rtlsdr_source_0_0, 0), (self.qtgui_sink_x_0, 0))
 
 
     def closeEvent(self, event):
@@ -398,6 +506,10 @@ class rds_rx(gr.top_block, Qt.QWidget):
     def set_freq(self, freq):
         self.freq = freq
         self.set_freq_tune(self.freq*1e6 - self.freq_offset)
+        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_1.set_frequency_range(self.freq, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_1_0.set_frequency_range(self.freq, self.samp_rate / (self.decimation*5))
+        self.qtgui_sink_x_0.set_frequency_range(self.freq*1e6 - 250e3, self.samp_rate)
         self.rds_panel_0.set_frequency(self.freq)
         self.rds_parser_0.reset() # self.freq
 
@@ -417,7 +529,10 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.analog_quadrature_demod_cf_0.set_gain((self.samp_rate / self.decimation) / (2*math.pi*75000))
         self.freq_xlating_fir_filter_xxx_0.set_taps(firdes.low_pass(1, self.samp_rate, 135000, 20000))
         self.freq_xlating_fir_filter_xxx_1_0.set_taps(firdes.low_pass(1.0, self.samp_rate / self.decimation, 7.5e3, 5e3))
-        self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_1.set_frequency_range(self.freq, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_1_0.set_frequency_range(self.freq, self.samp_rate / (self.decimation*5))
+        self.qtgui_sink_x_0.set_frequency_range(self.freq*1e6 - 250e3, self.samp_rate)
         self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
         self.rtlsdr_source_0_0.set_sample_rate(self.samp_rate)
 
@@ -457,7 +572,9 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.decimation = decimation
         self.analog_quadrature_demod_cf_0.set_gain((self.samp_rate / self.decimation) / (2*math.pi*75000))
         self.freq_xlating_fir_filter_xxx_1_0.set_taps(firdes.low_pass(1.0, self.samp_rate / self.decimation, 7.5e3, 5e3))
-        self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_1.set_frequency_range(self.freq, self.samp_rate / self.decimation)
+        self.qtgui_freq_sink_x_1_0.set_frequency_range(self.freq, self.samp_rate / (self.decimation*5))
         self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
 
 

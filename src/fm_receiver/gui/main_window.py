@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.scan_requested = pyqtSignal()
         self.stations = []
         self.fm_receiver = rds_rx()
-        self.current_station_freq = 90.9 * 10**6
+        self.current_station_freq = 88.5 * 10**6
         self.current_station_index = 0
         
         # FM band range (88-108 MHz)
@@ -112,6 +112,41 @@ class MainWindow(QMainWindow):
     def create_debug_widget(self):
         """Create debug widget"""
         self.debug_widget = QWidget()
+        layout = QVBoxLayout(self.debug_widget)
+
+        # Volume
+        layout.addWidget(self.fm_receiver._volume_win) # Need to change
+
+        # RF Gain
+        layout.addWidget(self.fm_receiver._gain_win)    # Need to change
+
+        # Freq Slider
+        # soon 
+
+        tab = QTabWidget()
+
+        # RF Spectrum
+        tab.addTab(self.fm_receiver._qtgui_sink_x_0_win, 'RF Band')
+
+        # FM Demod
+        tab.addTab(self.fm_receiver._qtgui_freq_sink_x_1_win,'Fm Demod')
+
+        # Water Fall
+        tab.addTab(self.fm_receiver._qtgui_waterfall_sink_x_0_win,'Water Fall')
+
+        # L+R
+        tab.addTab(self.fm_receiver._qtgui_freq_sink_x_1_0_win,'L+R')
+
+        # Constellation Receiver
+        tab.addTab(self.fm_receiver._qtgui_const_sink_x_0_win,'RDS Constellation')
+
+
+        # RDS Data
+        # Soon
+        
+
+        layout.addWidget(tab)
+
 
     def create_stations_widget(self):
         """Create stations widget with proper layout"""
