@@ -17,12 +17,12 @@ class ConfigManager:
         self.load()
     
     def _get_default_config_path(self):
-        """Get default configuration file path"""
-        home_dir = Path.home()
-        config_dir = home_dir / '.fm_receiver'
-        config_dir.mkdir(exist_ok=True)
+        """Get default configuration file path relative to where the script is run"""
+        current_dir = Path.cwd()  # Gets the current working directory
+        config_dir = current_dir / 'config' 
+        config_dir.mkdir(exist_ok=True)  # Create it if it doesn't exist
         return config_dir / 'config.json'
-    
+        
     def load(self):
         """Load configuration from file"""
         try:
@@ -57,9 +57,5 @@ class ConfigManager:
     def _get_default_config(self):
         """Get default configuration"""
         return {
-            'last_frequency': 88.5,
-            'last_volume': 50,
-            'window_geometry': None,
-            'auto_scan_enabled': True,
-            'rds_enabled': True
+            'stations': [88.7e6],
         }

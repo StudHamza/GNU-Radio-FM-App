@@ -14,7 +14,7 @@ class FMReceiverApp:
         logger.info("Initializing FM Receiver Application")
         
         # Create main window
-        self.main_window = MainWindow()
+        self.main_window = MainWindow(config_path)
         
         logger.info("FM Receiver Application initialized successfully")
     

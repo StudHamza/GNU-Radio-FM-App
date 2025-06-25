@@ -15,6 +15,7 @@ from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 from .scan_thread import ScanThread
 from flowgraphs.rds_rx import rds_rx
 from .frequency_slider import FrequencySlider
+from core.config_manager import ConfigManager
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,10 @@ logger = logging.getLogger(__name__)
 class MainWindow(QMainWindow):
     """Modern FM Radio Main Window"""
     
-    def __init__(self):
+    def __init__(self, config_path:str):
         super().__init__()
         
+        self.config_manager = ConfigManager(config_path)
         self.flowgraph = False
         self.scan_requested = pyqtSignal()
         self.stations = []
@@ -36,6 +38,7 @@ class MainWindow(QMainWindow):
         self.fm_min_freq = 88.0 * 10**6
         self.fm_max_freq = 108.0 * 10**6
         
+        self.load_config() 
         self.setup_ui()
         logger.info("Modern FM Radio UI created")
     
@@ -223,7 +226,7 @@ class MainWindow(QMainWindow):
             self.current_station_freq/10**6, 87.5, 108.0
         )
 
-    def _arrange_control_layout(self, control_layout):
+    def _arrange_control_layout(self, control_layout:QGridLayout):
         """Arrange all control elements in the grid layout"""
         control_layout.addWidget(self.scan_btn_home, 0, 0, 1, 2)
         control_layout.addWidget(self.record_btn, 0, 2, 1, 2)
@@ -384,10 +387,20 @@ class MainWindow(QMainWindow):
         self.set_freq(next_freq)
         self.current_station_index = next_index
 
+    def load_config(self):
+        self.stations = self.config_manager.get('stations')
+        
+    
+    def save_config(self):
+        self.config_manager.set('stations', self.stations)
+        self.config_manager.save()
+        
+
     def closeEvent(self, event):
         """Handle window close event"""
         if self.flowgraph:
             self.fm_receiver.stop()
             self.fm_receiver.wait()
+        self.save_config()
         logger.info("Application closing")
         event.accept()
