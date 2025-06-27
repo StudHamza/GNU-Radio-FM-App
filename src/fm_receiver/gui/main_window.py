@@ -25,20 +25,20 @@ class MainWindow(QMainWindow):
     
     def __init__(self, config_path:str):
         super().__init__()
-        
+
         self.config_manager = ConfigManager(config_path)
         self.flowgraph = False
         self.scan_requested = pyqtSignal()
         self.stations = []
         self.fm_receiver = rds_rx()
-        self.current_station_freq = 88.5 * 10**6
+        self.load_config() 
+        self.current_station_freq = self.stations[0]
         self.current_station_index = 0
         
         # FM band range (88-108 MHz)
         self.fm_min_freq = 88.0 * 10**6
         self.fm_max_freq = 108.0 * 10**6
         
-        self.load_config() 
         self.setup_ui()
         logger.info("Modern FM Radio UI created")
     
@@ -124,6 +124,9 @@ class MainWindow(QMainWindow):
         # soon 
 
         tab = QTabWidget()
+
+        control_panel = QWidget()
+        tab.addTab(control_panel,'Control Panel')
 
         # RF Spectrum
         tab.addTab(self.fm_receiver._qtgui_sink_x_0_win, 'RF Band')

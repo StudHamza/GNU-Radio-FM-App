@@ -85,7 +85,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         ##################################################
         self.rrc_taps = rrc_taps = firdes.root_raised_cosine(1.0, 19000,19000/8, 1.0, 151)
         self.freq_offset = freq_offset = 250000
-        self.freq = freq = 88.5
+        self.freq = freq = 88.7
         self.volume = volume = -6
         self.samp_rate = samp_rate = 1920000
         self.rrc_taps_manchester = rrc_taps_manchester = [rrc_taps[n] - rrc_taps[n+8] for n in range(len(rrc_taps)-8)]
@@ -111,7 +111,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
-        self._freq_range = Range(77, 108, 0.1, 88.5, 200)
+        self._freq_range = Range(77, 108, 0.1, 88.7, 200)
         self._freq_win = RangeWidget(self._freq_range, self.set_freq, "Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_grid_layout.addWidget(self._freq_win, 0, 0, 1, 1)
         for r in range(0, 1):
