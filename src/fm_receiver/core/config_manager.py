@@ -30,12 +30,19 @@ class ConfigManager:
                 with open(self.config_path, 'r') as f:
                     self.config = json.load(f)
                 logger.info(f"Configuration loaded from {self.config_path}")
+
+                # Check if 'stations' is missing or empty
+                if not self.config.get('stations'):
+                    logger.warning("'stations' is missing or empty. Loading default config.")
+                    self.config = self._get_default_config()
+
             else:
                 self.config = self._get_default_config()
                 logger.info("Using default configuration")
         except Exception as e:
             logger.error(f"Error loading config: {e}")
             self.config = self._get_default_config()
+
     
     def save(self):
         """Save configuration to file"""

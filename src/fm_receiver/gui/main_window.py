@@ -8,13 +8,14 @@ from time import sleep
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QPushButton,
     QLineEdit, QTextEdit, QHBoxLayout, QListWidget, QSpinBox, QCheckBox,
-    QSlider, QGridLayout, QStackedWidget, QButtonGroup, QSizePolicy
+    QSlider, QGridLayout, QStackedWidget, QButtonGroup, QSizePolicy, QScrollArea
 )
-from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal,pyqtSlot
 
-from .scan_thread import ScanThread
+from .scan_thread import ScannerWorker
 from flowgraphs.rds_rx import rds_rx
 from .frequency_slider import FrequencySlider
+from .volume_slider import VolumeSlider
 from core.config_manager import ConfigManager
 
 logger = logging.getLogger(__name__)
@@ -27,14 +28,18 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.config_manager = ConfigManager(config_path)
-        self.flowgraph = False
+        self.mute = True
         self.scan_requested = pyqtSignal()
         self.stations = []
         self.fm_receiver = rds_rx()
         self.load_config() 
-        self.current_station_freq = self.stations[0]
+        self.current_station_freq = self.stations[0] 
         self.current_station_index = 0
         
+        # Start flowgraph and mute by default
+        self.fm_receiver.start()
+
+
         # FM band range (88-108 MHz)
         self.fm_min_freq = 88.0 * 10**6
         self.fm_max_freq = 108.0 * 10**6
@@ -59,11 +64,11 @@ class MainWindow(QMainWindow):
         
         self.create_home_widget()
         self.create_stations_widget()
-        self.create_debug_widget()
+        # self.create_debug_widget()
         
         self.stacked_widget.addWidget(self.home_widget)
         self.stacked_widget.addWidget(self.stations_widget)
-        self.stacked_widget.addWidget(self.debug_widget)
+        # self.stacked_widget.addWidget(self.debug_widget)
         
         self.create_bottom_menu()
         
@@ -129,7 +134,7 @@ class MainWindow(QMainWindow):
         tab.addTab(control_panel,'Control Panel')
 
         # RF Spectrum
-        tab.addTab(self.fm_receiver._qtgui_sink_x_0_win, 'RF Band')
+        # tab.addTab(self.fm_receiver._qtgui_sink_x_0_win, 'RF Band')
 
         # FM Demod
         tab.addTab(self.fm_receiver._qtgui_freq_sink_x_1_win,'Fm Demod')
@@ -152,31 +157,41 @@ class MainWindow(QMainWindow):
 
 
     def create_stations_widget(self):
-        """Create stations widget with proper layout"""
+        """Create stations widget with proper layout and scroll area"""
         self.stations_widget = QWidget()
         layout = QVBoxLayout(self.stations_widget)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
         
+        # Title
         self.title_label = QLabel("Available Stations")
         self.title_label.setStyleSheet(
             "font-size: 24px; font-weight: bold; margin-bottom: 20px;"
         )
         layout.addWidget(self.title_label)
-        
+
+        # Scrollable area for stations
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+
+        # Container for grid layout
+        self.stations_container = QWidget()
         self.stations_layout = QGridLayout()
-        stations_widget = QWidget()
-        stations_widget.setLayout(self.stations_layout)
-        
+        self.stations_container.setLayout(self.stations_layout)
+
+        self.scroll_area.setWidget(self.stations_container)
+        layout.addWidget(self.scroll_area)  # Add scroll area to main layout
+
+        # Fill grid
         if self.stations:
             self._populate_stations()
         else:
             no_stations_label = QLabel("No stations available")
             no_stations_label.setAlignment(Qt.AlignCenter)
             self.stations_layout.addWidget(no_stations_label, 0, 0, 2, 2)
-        
-        layout.addWidget(stations_widget)
+
         layout.addStretch()
+
 
     def _populate_stations(self):
         """Populate the stations grid with station buttons"""
@@ -230,11 +245,16 @@ class MainWindow(QMainWindow):
         self.scan_btn_home = QPushButton("Scan Stations")
         self.scan_btn_home.setMinimumHeight(50)
         self.scan_btn_home.setStyleSheet("font-size: 16px;")
-        self.scan_btn_home.clicked.connect(self.update_stations)
+        self.scan_btn_home.clicked.connect(self.scan_mode)
         
         self.record_btn = QPushButton("Record")
         self.record_btn.setMinimumHeight(50)
         self.record_btn.setStyleSheet("font-size: 16px;")
+
+        self.volume_slider = VolumeSlider()
+        self.volume_slider.setMinimumHeight(50)
+        self.volume_slider.volumeChanged.connect(self.set_volume)
+
 
     def _create_display_elements(self):
         """Create display elements for signal and frequency"""
@@ -277,58 +297,101 @@ class MainWindow(QMainWindow):
         control_layout.addWidget(self.rds_info, 2, 0, 1, 6)
         control_layout.addWidget(self.channel_slider, 3, 0, 1, 6)
         control_layout.addWidget(self.btn, 4, 2, 1, 2)
+
+        control_layout.addWidget(self.volume_slider,0,6,4,1)
         
         for i in range(6):
             control_layout.setColumnStretch(i, 1)
 
     def fm_player(self):
-        """Toggle FM receiver on/off"""
-        if self.flowgraph:
+        """Toggle volume on/off"""
+        if self.mute:
             self.btn.setText("Listen")
-            self.fm_receiver.stop()
-            self.fm_receiver.wait()
-            self.flowgraph = False
+            self.set_volume(50)
+            self.mute = False
         else:
             self.btn.setText("Stop Listening")
-            self.fm_receiver.start()
-            self.flowgraph = True
+            self.set_volume(0)
+            self.mute = True
 
-    def update_stations(self):
-        """Update station list by scanning"""
-        try:
-            self.fm_receiver.stop()
-            self.fm_receiver.wait()
-            sleep(1)
-            self.flowgraph = False
-            del self.fm_receiver
-            gc.collect()
-        except Exception as e:
-            logger.error(f"Error during releasing resources: {e}")
-            return
-        
+    # def scan_mode(self):
+    #     # Change Selector to Scan, Increase bandwidth to max, remove offset
+    #     self.stacked_widget.setCurrentIndex(1)
+    #     self.stations_button.setChecked(True)
+    #     self.scan_btn_home.setDisabled(True)
+    
+    #     self.fm_receiver.set_mode(0) # Scan mode
+    #     self.fm_receiver.set_done(0)
+    #     self.fm_receiver.set_freq_offset(0)
+    #     current_samp_rate = self.fm_receiver.get_samp_rate()
+    #     self.fm_receiver.set_samp_rate(2.048e6)
+    #     self.set_freq(88e6)
+
+    #     # Now scanning logic
+    #     while (self.current_station_freq != 90e6):
+    #         while(self.fm_receiver.get_done()==0):
+    #             continue
+
+    #         freq = self.get_freq()
+    #         self._report_progress(freq)
+    #         new_freq = freq+1e6
+    #         self.set_freq(new_freq)
+    #         self.fm_receiver.set_done(0)
+
+    #         if new_freq == 90e6:
+    #             # Get freq table, return mode to listening, stop flowgraph
+    #             self.stations = self.fm_receiver.epy_block_0.get_staions()
+    #             self.fm_receiver.set_mode(1) # Scan mode
+    #             self.fm_receiver.set_freq_offset(250e3)
+    #             self.fm_receiver.set_samp_rate(current_samp_rate)
+    #             self.update_display()
+    #             return
+
+    def scan_mode(self):
         self.stacked_widget.setCurrentIndex(1)
         self.stations_button.setChecked(True)
         self.scan_btn_home.setDisabled(True)
-        self._start_scan()
 
-    def _start_scan(self):
-        """Start the scanning thread"""
+        # Post scan logic 
+        self.set_freq(88e6)
+        self.fm_receiver.set_mode(0)  # Scan mode
+        self.fm_receiver.set_done(0)   
+        self.fm_receiver.set_freq_offset(0) 
+
+        self.samp_rate = self.fm_receiver.get_samp_rate()
+        self.fm_receiver.set_samp_rate(2.048e6) # Increase bandwidth for faster scanning
+
+        # Thread setup
         self.thread = QThread()
-        self.worker = ScanThread()
+        self.worker = ScannerWorker(self.fm_receiver,88e6,110e6)
         self.worker.moveToThread(self.thread)
-        
+
+        # Signals and slots - connect first
         self.thread.started.connect(self.worker.run)
+        self.worker.progress.connect(self._report_progress)
+        self.worker.finished.connect(self.scan_finished)
         self.worker.finished.connect(self.thread.quit)
-        self.worker.scan_finished.connect(self._handle_scan_finished)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
-        self.worker.progress_updated.connect(self._report_progress)
-        
+
+        # Now start the thread
         self.thread.start()
+
+
+    def scan_finished(self, done:bool):
+
+        self.stations = self.fm_receiver.epy_block_0.get_staions()
+        self.fm_receiver.set_mode(1)
+        self.fm_receiver.set_freq_offset(250e3)
+        self.fm_receiver.set_samp_rate(self.samp_rate)
+
+        self.update_display()
+        self.scan_btn_home.setDisabled(False)
+
 
     def update_display(self):
         """Update the stations display"""
-        self.stations.sort()
+        self.stations = sorted(self.stations)
         
         while self.stations_layout.count():
             child = self.stations_layout.takeAt(0)
@@ -352,9 +415,13 @@ class MainWindow(QMainWindow):
             station_btn.clicked.connect(self.change_channel)
             self.stations_layout.addWidget(station_btn, row, col)
 
+    @pyqtSlot(float)
     def _report_progress(self, value):
         """Report scanning progress"""
-        self.title_label.setText(f"Scanning progress: {value}")
+        self.set_freq(value)
+        self.fm_receiver.set_done(0)
+
+        self.title_label.setText(f"Scanning: {value/1e6:.1f} MHz")
 
     def _handle_scan_finished(self, stations):
         """Handle completion of station scanning"""
@@ -377,6 +444,18 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentIndex(0)
         self.home_button.setChecked(True)
 
+    def set_volume(self, value:int):
+        # Logic to set volume
+        self.volume_slider.setVolume(value)
+        mapped_value = max(min(value, 100), 0)
+        vol = (mapped_value / 100) * 30 - 20
+        self.fm_receiver.set_volume(vol)
+        return
+
+
+    def get_freq(self):
+        return self.current_station_freq
+    
     def set_freq(self, freq):
         """Set frequency and update display"""
         self.freq_label.setText(f"{freq/10**6:.1f} FM")
@@ -436,9 +515,9 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle window close event"""
-        if self.flowgraph:
-            self.fm_receiver.stop()
-            self.fm_receiver.wait()
+    
+        self.fm_receiver.stop()
+        self.fm_receiver.wait()
         self.save_config()
         logger.info("Application closing")
         event.accept()

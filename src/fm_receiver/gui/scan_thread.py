@@ -1,32 +1,45 @@
-from PyQt5.QtCore import QThread, pyqtSignal
-from utils.fm_scanner import scan_fm
-import numpy as np
+from PyQt5.QtCore import QThread, pyqtSignal, QObject
+import logging
 
-class ScanThread(QThread):
-    """FM station scanning"""
-    scan_finished = pyqtSignal(list)
-    progress_updated = pyqtSignal(str)
-    
-    def __init__(self):
+logger = logging.getLogger(__name__)
+
+class ScannerWorker(QObject):
+    progress = pyqtSignal(float)      # Emitting current frequency
+    finished = pyqtSignal(bool)       # Emitting stations when done
+
+    def __init__(self, fm_receiver, start_freq,end_freq):
         super().__init__()
-        self._is_running = True  # Flag to control stopping
+        self.fm_receiver = fm_receiver
+        self._is_running = True
+        self.start_freq = start_freq
+        self.end_freq = end_freq
+
+        self.progress.emit(start_freq)
+        logger.info("Inialized scanning monitor")
+
+
 
     def run(self):
-        stations = []
-        
-        center_freqs = np.arange(88e6,110e6,1e6)
-                
-        for i, freq in enumerate(center_freqs):
-            if not self._is_running:
+        freq = self.start_freq
+        logger.info("Running scanning monitor")
+
+        while self._is_running:
+            while self.fm_receiver.get_done() == 0:
+                if not self._is_running:
+                    return
+                QThread.msleep(10)  # Don't hog the CPU
+            logger.info(f"Scanning {freq}")
+            freq += 1e6
+            if freq > self.end_freq:
                 break
-            self.progress_updated.emit(f"Scanning {freq/1e6:.1f} MHz...")
 
-            station = scan_fm(freq)
-            
-            stations += station
+            self.progress.emit(freq)
+            while self.fm_receiver.get_done() == 1:
+                # dont perform next scan
+                continue
 
-        self.progress_updated.emit(f"Detected {len(stations)}")           
-        self.scan_finished.emit(list(set(stations)))
+        # Post-scan logic
+        self.finished.emit(True)
 
     def stop(self):
         self._is_running = False

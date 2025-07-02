@@ -45,6 +45,32 @@ blocks:
     coordinate: [296, 132.0]
     rotation: 0
     state: true
+- name: done
+  id: variable
+  parameters:
+    comment: '0 == Scanning in progress
+
+      1 == Finished scanning'
+    value: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1128, 60.0]
+    rotation: 0
+    state: true
+- name: fft_size
+  id: variable
+  parameters:
+    comment: ''
+    value: 2**7
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1048, 60.0]
+    rotation: 0
+    state: true
 - name: freq
   id: variable_qtgui_range
   parameters:
@@ -70,7 +96,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '250000'
+    value: 250e3
   states:
     bus_sink: false
     bus_source: false
@@ -82,7 +108,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: freq*1e6 - freq_offset
+    value: freq*1e6-freq_offset
   states:
     bus_sink: false
     bus_source: false
@@ -111,6 +137,30 @@ blocks:
     coordinate: [304, 4.0]
     rotation: 0
     state: true
+- name: mode
+  id: variable
+  parameters:
+    comment: ''
+    value: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1360, 52.0]
+    rotation: 0
+    state: true
+- name: num_items
+  id: variable
+  parameters:
+    comment: ''
+    value: samp_rate*2
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [952, 60.0]
+    rotation: 0
+    state: true
 - name: pilot_taps
   id: variable_band_pass_filter_taps
   parameters:
@@ -127,7 +177,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1160, 4.0]
+    coordinate: [696, 4.0]
     rotation: 0
     state: true
 - name: rrc_taps
@@ -208,7 +258,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [196.0, 712]
+    coordinate: [236.0, 920]
     rotation: 270
     state: true
 - name: analog_fm_deemph_0_0
@@ -225,7 +275,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1452.0, 616]
+    coordinate: [1588.0, 816]
     rotation: 270
     state: enabled
 - name: analog_fm_deemph_0_0_0
@@ -242,7 +292,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1380.0, 616]
+    coordinate: [1516.0, 816]
     rotation: 270
     state: enabled
 - name: analog_pll_refout_cc_0
@@ -260,7 +310,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [916.0, 560]
+    coordinate: [1044.0, 792]
     rotation: 270
     state: true
 - name: analog_quadrature_demod_cf_0
@@ -276,7 +326,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [520, 284.0]
+    coordinate: [688, 524.0]
     rotation: 0
     state: true
 - name: audio_sink_0
@@ -293,7 +343,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1416.0, 992]
+    coordinate: [1552.0, 1192]
     rotation: 270
     state: enabled
 - name: blocks_add_xx_0
@@ -311,7 +361,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1376.0, 512]
+    coordinate: [1512.0, 704]
     rotation: 270
     state: enabled
 - name: blocks_complex_to_imag_0
@@ -327,8 +377,24 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1016.0, 496]
+    coordinate: [1144.0, 728]
     rotation: 90
+    state: enabled
+- name: blocks_complex_to_mag_squared_0
+  id: blocks_complex_to_mag_squared
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: fft_size
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1016, 284.0]
+    rotation: 0
     state: enabled
 - name: blocks_delay_0
   id: blocks_delay
@@ -346,7 +412,21 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1032, 288.0]
+    coordinate: [1168, 528.0]
+    rotation: 0
+    state: true
+- name: blocks_msgpair_to_var_0_0
+  id: blocks_msgpair_to_var
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    target: done
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1632, 284.0]
     rotation: 0
     state: true
 - name: blocks_multiply_const_vxx_0
@@ -364,7 +444,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1388.0, 784]
+    coordinate: [1524.0, 984]
     rotation: 270
     state: enabled
 - name: blocks_multiply_const_vxx_0_0
@@ -382,7 +462,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1460.0, 784]
+    coordinate: [1596.0, 984]
     rotation: 270
     state: enabled
 - name: blocks_multiply_xx_0
@@ -400,7 +480,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1000.0, 672]
+    coordinate: [1128.0, 904]
     rotation: 90
     state: true
 - name: blocks_multiply_xx_1
@@ -418,7 +498,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1088, 384.0]
+    coordinate: [1208, 624.0]
     rotation: 0
     state: true
 - name: blocks_null_sink_0
@@ -435,7 +515,48 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [928, 832.0]
+    coordinate: [1016, 1040.0]
+    rotation: 0
+    state: enabled
+- name: blocks_selector_0
+  id: blocks_selector
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    enabled: 'True'
+    input_index: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_inputs: '1'
+    num_outputs: '2'
+    output_index: mode
+    showports: 'True'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [384, 268.0]
+    rotation: 0
+    state: true
+- name: blocks_stream_to_vector_0
+  id: blocks_stream_to_vector
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: fft_size
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [600, 288.0]
     rotation: 0
     state: enabled
 - name: blocks_sub_xx_0
@@ -453,9 +574,27 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1448.0, 488]
+    coordinate: [1584.0, 680]
     rotation: 270
     state: enabled
+- name: blocks_vector_to_stream_0
+  id: blocks_vector_to_stream
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: fft_size
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1216, 288.0]
+    rotation: 0
+    state: true
 - name: digital_constellation_receiver_cb_0
   id: digital_constellation_receiver_cb
   parameters:
@@ -473,7 +612,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [648, 800.0]
+    coordinate: [688, 1008.0]
     rotation: 0
     state: true
 - name: digital_diff_decoder_bb_0
@@ -490,7 +629,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [712, 980.0]
+    coordinate: [752, 1188.0]
     rotation: 180
     state: enabled
 - name: digital_symbol_sync_xx_0
@@ -517,9 +656,120 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [320, 804.0]
+    coordinate: [360, 1012.0]
     rotation: 0
     state: true
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      import math\nfrom gnuradio import gr\nimport pmt\nfrom time import sleep\n\n\
+      \nclass blk(gr.sync_block):  # other base classes are basic_block, decim_block,\
+      \ interp_block\n    \"\"\"Embedded Python Block example - a simple multiply\
+      \ const\"\"\"\n\n    def __init__(self, fft_size=2**7, samp_rate=2.048e6, freq=88e6,done=0):\
+      \  # only default arguments here\n        \"\"\"arguments to this function show\
+      \ up as parameters in GRC\"\"\"\n        gr.sync_block.__init__(\n         \
+      \   self,\n            name='Embedded Python Block',   # will show up in GRC\n\
+      \            in_sig=[np.float32],\n            out_sig=None\n        )\n   \
+      \     self.done = done\n        self.samp_rate = samp_rate  \n        self.fft_size\
+      \ = fft_size\n        self.freq = freq\n        self.threshold =0.3\n      \
+      \  self.num_items = samp_rate*2\n\n        bin_bandwidth = samp_rate / fft_size\n\
+      \        fm_bandwidth = 200e3\n\n        station_size = math.ceil(fm_bandwidth\
+      \ / bin_bandwidth)\n        self.half_station_size = station_size / 2 if station_size\
+      \ % 2 == 0 else (station_size + 1) / 2\n        self.compute_candidate_freqs()\n\
+      \n        self.data = np.array([], dtype=np.float32)\n\n        self.power_per_station\
+      \ = np.zeros(self.candidate_freqs.size)\n\n        self.detected_stations= set()\n\
+      \n        self.message_port_register_out(pmt.intern(\"done\"))\n\n\n\n    def\
+      \ work(self, input_items, output_items):\n\n        if self.done == 1: \n  \
+      \          return len(input_items[0])\n        \n        self.data = np.concatenate((self.data,\
+      \ input_items[0]))\n\n        if len(self.data) < self.num_items:\n        \
+      \    return len(input_items[0])\n        \n        data = self.data\n\n    \
+      \    self.compute_candidate_freqs() \n        print(f\"Scannning at {self.freq}\"\
+      )\n\n        for i in range(0, len(data), self.fft_size):\n            if i\
+      \ + self.fft_size > len(data):\n                break\n                \n  \
+      \          data_chunk = data[i:i+self.fft_size]\n            \n            for\
+      \ j, station_bin in enumerate(self.candidate_freqs_bin):\n                start_bin\
+      \ = int(station_bin - self.half_station_size)\n                end_bin = int(station_bin\
+      \ + self.half_station_size)\n                \n                # Ensure we don't\
+      \ go out of bounds\n                start_bin = max(0, start_bin)\n        \
+      \        end_bin = min(len(data_chunk), end_bin)\n                \n       \
+      \         if start_bin < end_bin:\n                    potential_station = np.sum(np.abs(data_chunk[start_bin:end_bin])**2)\n\
+      \                    self.power_per_station[j] += potential_station\n\n\n  \
+      \      normalized_power_per_station = self.normalize(self.power_per_station)\n\
+      \n        # Find active stations\n        active_indices = np.where(normalized_power_per_station\
+      \ > self.threshold)[0]\n\n        # Group adjacent active indices\n        groups\
+      \ = []\n        if len(active_indices) > 0:\n            group = [active_indices[0]]\n\
+      \            for idx in active_indices[1:]:\n                if idx == group[-1]\
+      \ + 1:\n                    group.append(idx)\n                else:\n     \
+      \               groups.append(group)\n                    group = [idx]\n  \
+      \          groups.append(group)  # append the last group\n\n        # Pick max\
+      \ power freq in each group\n        for group in groups:\n            max_idx\
+      \ = group[np.argmax(normalized_power_per_station[group])]\n  \n            self.detected_stations.add(float(self.candidate_freqs[max_idx]))\n\
+      \n        if(self.detected_stations):\n            print(\"All detected:\",\
+      \ sorted(self.detected_stations))\n\n        print(\"Done Scanning\")\n    \
+      \    self.done = 1\n        msg = pmt.cons(pmt.intern(\"value\"), pmt.from_double(1))\n\
+      \        self.message_port_pub(pmt.intern(\"done\"), msg)\n\n        self.clean_up()\n\
+      \        \t\n        return len(input_items[0])\n\n    def clean_up(self):\n\
+      \        self.power_per_station = np.zeros(self.candidate_freqs.size)\n    \
+      \    self.data = np.array([], dtype=np.float32)  # clear data for next batch\n\
+      \n    def compute_candidate_freqs(self):\n        step_size = 100e3\n      \
+      \  start_freq = self.round_to_3_sigfigs(self.freq -  self.fft_size * (self.samp_rate\
+      \ / self.fft_size) / 2)\n        end_freq = self.round_to_3_sigfigs(self.freq\
+      \ +  self.fft_size * (self.samp_rate / self.fft_size) / 2)\n\n        self.candidate_freqs\
+      \ = np.arange(start_freq, end_freq, step_size)\n        self.candidate_freqs\
+      \ = self.candidate_freqs[1:-1]\n        self.candidate_freqs_bin = np.round(((self.candidate_freqs\
+      \ - self.freq) * self.fft_size / self.samp_rate) + self.fft_size / 2, 1).astype(int)\n\
+      \n    def get_staions(self):\n        return self.detected_stations\n    \n\
+      \    def normalize(self, x):\n        \"\"\"Normalize array to 0-1 range\"\"\
+      \"\n        x_min, x_max = x.min(), x.max()\n        if x_max == x_min:\n  \
+      \          return np.zeros_like(x)\n        return (x - x_min) / (x_max - x_min)\n\
+      \n    def round_to_3_sigfigs(self, x):\n        \"\"\"Round to 3 significant\
+      \ figures\"\"\"\n        if x == 0:\n            return 0\n        else:\n \
+      \           return round(x, -int(math.floor(math.log10(abs(x))) - 2))\n\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    done: done
+    fft_size: fft_size
+    freq: freq*10**6
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+  states:
+    _io_cache: ('Embedded Python Block', 'blk', [('fft_size', '128'), ('samp_rate',
+      '2048000.0'), ('freq', '88000000.0'), ('done', '0')], [('0', 'float', 1)], [('done',
+      'message', 1)], 'Embedded Python Block example - a simple multiply const', ['done',
+      'fft_size', 'freq', 'samp_rate'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1384, 260.0]
+    rotation: 0
+    state: true
+- name: fft_vxx_0
+  id: fft_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    fft_size: fft_size
+    forward: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nthreads: '1'
+    shift: 'True'
+    type: complex
+    window: window.blackmanharris(fft_size)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [776, 252.0]
+    rotation: 0
+    state: enabled
 - name: fir_filter_xxx_0
   id: fir_filter_xxx
   parameters:
@@ -536,7 +786,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [916.0, 368]
+    coordinate: [1044.0, 600]
     rotation: 270
     state: true
 - name: fir_filter_xxx_1
@@ -555,7 +805,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1208, 276.0]
+    coordinate: [1336, 532.0]
     rotation: 0
     state: enabled
 - name: fir_filter_xxx_1_0
@@ -574,7 +824,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1200, 388.0]
+    coordinate: [1336, 628.0]
     rotation: 0
     state: enabled
 - name: fir_filter_xxx_2
@@ -593,7 +843,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [304, 612.0]
+    coordinate: [416, 844.0]
     rotation: 180
     state: enabled
 - name: freq_xlating_fir_filter_xxx_0
@@ -613,7 +863,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [256, 260.0]
+    coordinate: [432, 500.0]
     rotation: 0
     state: enabled
 - name: freq_xlating_fir_filter_xxx_1_0
@@ -633,7 +883,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [668.0, 440]
+    coordinate: [860.0, 632]
     rotation: 270
     state: enabled
 - name: import_0
@@ -659,7 +909,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1208, 228.0]
+    coordinate: [1336, 484.0]
     rotation: 180
     state: enabled
 - name: note_0_1
@@ -672,7 +922,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1200, 452.0]
+    coordinate: [1336, 692.0]
     rotation: 0
     state: enabled
 - name: note_0_2
@@ -685,8 +935,34 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [620.0, 464]
+    coordinate: [716.0, 736]
     rotation: 90
+    state: enabled
+- name: note_0_2_0
+  id: note
+  parameters:
+    alias: ''
+    comment: ''
+    note: Scanner Variables
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [944, 4.0]
+    rotation: 0
+    state: enabled
+- name: note_0_2_0_0
+  id: note
+  parameters:
+    alias: ''
+    comment: ''
+    note: FM Scanner
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 212.0]
+    rotation: 0
     state: enabled
 - name: note_1
   id: note
@@ -698,7 +974,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [868.0, 368]
+    coordinate: [996.0, 600]
     rotation: 270
     state: true
 - name: qtgui_const_sink_x_0
@@ -790,7 +1066,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1000, 916.0]
+    coordinate: [1000, 1140.0]
     rotation: 0
     state: enabled
 - name: qtgui_freq_sink_x_0
@@ -871,7 +1147,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [472, 172.0]
+    coordinate: [520, 660.0]
     rotation: 0
     state: enabled
 - name: qtgui_freq_sink_x_1
@@ -952,7 +1228,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [728, 68.0]
+    coordinate: [1072, 428.0]
     rotation: 0
     state: true
 - name: qtgui_freq_sink_x_1_0
@@ -1033,36 +1309,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1384, 140.0]
-    rotation: 0
-    state: true
-- name: qtgui_sink_x_0
-  id: qtgui_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    bw: samp_rate
-    comment: ''
-    fc: freq*1e6 - 250e3
-    fftsize: '1024'
-    gui_hint: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '"Spectrum"'
-    plotconst: 'True'
-    plotfreq: 'True'
-    plottime: 'True'
-    plotwaterfall: 'True'
-    rate: '10'
-    showports: 'False'
-    showrf: 'True'
-    type: complex
-    wintype: window.WIN_BLACKMAN_hARRIS
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [352, 404.0]
+    coordinate: [1576, 516.0]
     rotation: 0
     state: true
 - name: qtgui_waterfall_sink_x_0
@@ -1123,7 +1370,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [728, 168.0]
+    coordinate: [1072, 436.0]
     rotation: 0
     state: enabled
 - name: rational_resampler_xxx_0
@@ -1143,7 +1390,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [744, 260.0]
+    coordinate: [928, 500.0]
     rotation: 0
     state: true
 - name: rational_resampler_xxx_1
@@ -1163,7 +1410,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [512, 600.0]
+    coordinate: [632, 828.0]
     rotation: 180
     state: true
 - name: rds_decoder_0
@@ -1180,7 +1427,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [544, 980.0]
+    coordinate: [584, 1188.0]
     rotation: 180
     state: true
 - name: rds_panel_0
@@ -1195,7 +1442,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [208, 992.0]
+    coordinate: [248, 1200.0]
     rotation: 180
     state: true
 - name: rds_parser_0
@@ -1214,7 +1461,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [360, 976.0]
+    coordinate: [400, 1180.0]
     rotation: 180
     state: true
 - name: rtlsdr_source_0_0
@@ -1571,7 +1818,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [24, 356.0]
+    coordinate: [40, 356.0]
     rotation: 0
     state: enabled
 - name: uhd_usrp_source_0
@@ -2023,13 +2270,18 @@ connections:
 - [analog_quadrature_demod_cf_0, '0', rational_resampler_xxx_0, '0']
 - [blocks_add_xx_0, '0', analog_fm_deemph_0_0_0, '0']
 - [blocks_complex_to_imag_0, '0', blocks_multiply_xx_1, '1']
+- [blocks_complex_to_mag_squared_0, '0', blocks_vector_to_stream_0, '0']
 - [blocks_delay_0, '0', blocks_multiply_xx_1, '0']
 - [blocks_delay_0, '0', fir_filter_xxx_1, '0']
 - [blocks_multiply_const_vxx_0, '0', audio_sink_0, '0']
 - [blocks_multiply_const_vxx_0_0, '0', audio_sink_0, '1']
 - [blocks_multiply_xx_0, '0', blocks_complex_to_imag_0, '0']
 - [blocks_multiply_xx_1, '0', fir_filter_xxx_1_0, '0']
+- [blocks_selector_0, '0', blocks_stream_to_vector_0, '0']
+- [blocks_selector_0, '1', freq_xlating_fir_filter_xxx_0, '0']
+- [blocks_stream_to_vector_0, '0', fft_vxx_0, '0']
 - [blocks_sub_xx_0, '0', analog_fm_deemph_0_0, '0']
+- [blocks_vector_to_stream_0, '0', epy_block_0, '0']
 - [digital_constellation_receiver_cb_0, '0', digital_diff_decoder_bb_0, '0']
 - [digital_constellation_receiver_cb_0, '1', blocks_null_sink_0, '0']
 - [digital_constellation_receiver_cb_0, '2', blocks_null_sink_0, '1']
@@ -2037,6 +2289,8 @@ connections:
 - [digital_constellation_receiver_cb_0, '4', qtgui_const_sink_x_0, '0']
 - [digital_diff_decoder_bb_0, '0', rds_decoder_0, '0']
 - [digital_symbol_sync_xx_0, '0', digital_constellation_receiver_cb_0, '0']
+- [epy_block_0, done, blocks_msgpair_to_var_0_0, inpair]
+- [fft_vxx_0, '0', blocks_complex_to_mag_squared_0, '0']
 - [fir_filter_xxx_0, '0', analog_pll_refout_cc_0, '0']
 - [fir_filter_xxx_1, '0', blocks_add_xx_0, '0']
 - [fir_filter_xxx_1, '0', blocks_sub_xx_0, '0']
@@ -2052,9 +2306,7 @@ connections:
 - [rational_resampler_xxx_1, '0', fir_filter_xxx_2, '0']
 - [rds_decoder_0, out, rds_parser_0, in]
 - [rds_parser_0, out, rds_panel_0, in]
-- [rtlsdr_source_0_0, '0', freq_xlating_fir_filter_xxx_0, '0']
-- [rtlsdr_source_0_0, '0', qtgui_sink_x_0, '0']
-- [uhd_usrp_source_0, '0', freq_xlating_fir_filter_xxx_0, '0']
+- [rtlsdr_source_0_0, '0', blocks_selector_0, '0']
 
 metadata:
   file_format: 1
