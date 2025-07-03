@@ -10,11 +10,11 @@ class VolumeSlider(QWidget):
         super().__init__(parent)
 
         # Create label and slider
-        self.label = QLabel("Volume: 0")
+        self.label = QLabel("Volume: 50")
         self.slider = QSlider(Qt.Vertical)
         self.slider.setMinimum(0)
         self.slider.setMaximum(100)
-        self.slider.setValue(0)
+        self.slider.setValue(50)
 
         # Layout setup
         layout = QVBoxLayout()

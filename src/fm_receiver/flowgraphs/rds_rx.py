@@ -89,10 +89,11 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.rrc_taps = rrc_taps = firdes.root_raised_cosine(1.0, 19000,19000/8, 1.0, 151)
         self.freq_offset = freq_offset = 250e3
         self.freq = freq = 88.7
-        self.volume = volume = -20
+        self.volume = volume = -5
         self.rrc_taps_manchester = rrc_taps_manchester = [rrc_taps[n] - rrc_taps[n+8] for n in range(len(rrc_taps)-8)]
         self.pilot_taps = pilot_taps = firdes.complex_band_pass(1.0, 240000, 18980, 19020, 1000, window.WIN_HAMMING, 6.76)
         self.num_items = num_items = samp_rate*2
+        self.mute = mute = 1
         self.mode = mode = 1
         self.gain = gain = 40
         self.freq_tune = freq_tune = freq*1e6-freq_offset
@@ -103,7 +104,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
-        self._volume_range = Range(-20, 10, 1, -6, 200)
+        self._volume_range = Range(-20, 10, 1, -5, 200)
         self._volume_win = RangeWidget(self._volume_range, self.set_volume, "Volume", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_grid_layout.addWidget(self._volume_win, 1, 0, 1, 1)
         for r in range(1, 2):
@@ -410,8 +411,8 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.blocks_null_sink_0 = blocks.null_sink(gr.sizeof_float*1)
         self.blocks_multiply_xx_1 = blocks.multiply_vff(1)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
-        self.blocks_multiply_const_vxx_0_0 = blocks.multiply_const_ff(10**(1.*(volume)/10))
-        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_ff(10**(1.*(volume)/10))
+        self.blocks_multiply_const_vxx_0_0 = blocks.multiply_const_ff(0 if mute else 10 ** (1. * volume / 10))
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_ff(0 if mute else 10 ** (1. * volume / 10))
         self.blocks_msgpair_to_var_0_0 = blocks.msg_pair_to_var(self.set_done)
         self.blocks_delay_0 = blocks.delay(gr.sizeof_float*1, (len(pilot_taps) - 1) // 2)
         self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(fft_size)
@@ -455,9 +456,9 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.analog_fm_deemph_0_0, 0))
         self.connect((self.blocks_vector_to_stream_0, 0), (self.epy_block_0, 0))
+        self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
         self.connect((self.digital_constellation_receiver_cb_0, 1), (self.blocks_null_sink_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 2), (self.blocks_null_sink_0, 1))
-        self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
         self.connect((self.digital_constellation_receiver_cb_0, 0), (self.digital_diff_decoder_bb_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 4), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.digital_diff_decoder_bb_0, 0), (self.rds_decoder_0, 0))
@@ -536,8 +537,8 @@ class rds_rx(gr.top_block, Qt.QWidget):
 
     def set_volume(self, volume):
         self.volume = volume
-        self.blocks_multiply_const_vxx_0.set_k(10**(1.*(self.volume)/10))
-        self.blocks_multiply_const_vxx_0_0.set_k(10**(1.*(self.volume)/10))
+        self.blocks_multiply_const_vxx_0.set_k(0 if self.mute else 10 ** (1. * self.volume / 10))
+        self.blocks_multiply_const_vxx_0_0.set_k(0 if self.mute else 10 ** (1. * self.volume / 10))
 
     def get_rrc_taps_manchester(self):
         return self.rrc_taps_manchester
@@ -559,6 +560,14 @@ class rds_rx(gr.top_block, Qt.QWidget):
 
     def set_num_items(self, num_items):
         self.num_items = num_items
+
+    def get_mute(self):
+        return self.mute
+
+    def set_mute(self, mute):
+        self.mute = mute
+        self.blocks_multiply_const_vxx_0.set_k(0 if self.mute else 10 ** (1. * self.volume / 10))
+        self.blocks_multiply_const_vxx_0_0.set_k(0 if self.mute else 10 ** (1. * self.volume / 10))
 
     def get_mode(self):
         return self.mode

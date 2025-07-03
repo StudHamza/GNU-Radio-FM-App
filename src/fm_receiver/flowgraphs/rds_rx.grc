@@ -149,6 +149,18 @@ blocks:
     coordinate: [1360, 52.0]
     rotation: 0
     state: true
+- name: mute
+  id: variable
+  parameters:
+    comment: ''
+    value: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1432, 52.0]
+    rotation: 0
+    state: true
 - name: num_items
   id: variable
   parameters:
@@ -232,7 +244,7 @@ blocks:
     start: '-20'
     step: '1'
     stop: '10'
-    value: '-6'
+    value: '-5'
     widget: counter_slider
   states:
     bus_sink: false
@@ -435,7 +447,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    const: 10**(1.*(volume)/10)
+    const: 0 if mute else 10 ** (1. * volume / 10)
     maxoutbuf: '0'
     minoutbuf: '0'
     type: float
@@ -453,7 +465,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    const: 10**(1.*(volume)/10)
+    const: 0 if mute else 10 ** (1. * volume / 10)
     maxoutbuf: '0'
     minoutbuf: '0'
     type: float

@@ -34,9 +34,11 @@ class ScannerWorker(QObject):
                 break
 
             self.progress.emit(freq)
+            
             while self.fm_receiver.get_done() == 1:
-                # dont perform next scan
-                continue
+                if not self._is_running:
+                    return
+                QThread.msleep(10)
 
         # Post-scan logic
         self.finished.emit(True)
