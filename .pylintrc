@@ -1,0 +1,8 @@
+[MASTER]
+ignore=venv
+
+[MESSAGES CONTROL]
+disable=C0114,C0115,C0116  # Docstrings for modules/classes/functions
+
+[FORMAT]
+max-line-length=100

@@ -2,7 +2,6 @@
 Main FM Receiver Application Class
 """
 import logging
-from qtpy.QtCore import QTimer
 from gui.main_window import MainWindow
 
 logger = logging.getLogger(__name__)

@@ -28,7 +28,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.samp_rate = samp_rate  
         self.fft_size = fft_size
         self.freq = freq
-        self.threshold =0.4
+        self.threshold =0.3
         self.num_items = samp_rate*2
 
         bin_bandwidth = samp_rate / fft_size
@@ -61,6 +61,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         data = self.data
 
         self.compute_candidate_freqs() 
+        print(f"Scannning at {self.freq}")
 
         for i in range(0, len(data), self.fft_size):
             if i + self.fft_size > len(data):
@@ -104,6 +105,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
   
             self.detected_stations.add(float(self.candidate_freqs[max_idx]))
 
+        if(self.detected_stations):
+            print("All detected:", sorted(self.detected_stations))
+
+        print("Done Scanning")
         self.done = 1
         msg = pmt.cons(pmt.intern("value"), pmt.from_double(1))
         self.message_port_pub(pmt.intern("done"), msg)
