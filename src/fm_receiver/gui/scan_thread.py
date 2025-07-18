@@ -1,5 +1,6 @@
-from PyQt5.QtCore import QThread, pyqtSignal, QObject
 import logging
+
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 logger = logging.getLogger(__name__)
 

@@ -20,34 +20,25 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-from PyQt5 import Qt
-from gnuradio import qtgui
-from gnuradio.filter import firdes
-import sip
-from gnuradio import analog
 import math
-from gnuradio import audio
-from gnuradio import blocks
-from gnuradio import digital
-from gnuradio import filter
-from gnuradio import fft
-from gnuradio.fft import window
-from gnuradio import gr
-import sys
 import signal
-from argparse import ArgumentParser
-from gnuradio.eng_arg import eng_float, intx
-from gnuradio import eng_notation
-from gnuradio.qtgui import Range, RangeWidget
-from PyQt5 import QtCore
-import osmosdr
+import sys
 import time
+from argparse import ArgumentParser
+
+import osmosdr
 import rds
+import sip
+from gnuradio import (analog, audio, blocks, digital, eng_notation, fft,
+                      filter, gr, qtgui)
+from gnuradio.eng_arg import eng_float, intx
+from gnuradio.fft import window
+from gnuradio.filter import firdes
+from gnuradio.qtgui import Range, RangeWidget
+from PyQt5 import Qt, QtCore
+
 from . import rds_rx_epy_block_0 as epy_block_0  # embedded python block
 
-
-
-from gnuradio import qtgui
 
 class rds_rx(gr.top_block, Qt.QWidget):
 

@@ -9,19 +9,14 @@
 # Author: hamza
 # GNU Radio version: 3.10.1.1
 
-from gnuradio import blocks
-from gnuradio import fft
-from gnuradio.fft import window
-from gnuradio import gr
-from gnuradio.filter import firdes
-import sys
 import signal
+import sys
 from argparse import ArgumentParser
+
+from gnuradio import blocks, eng_notation, fft, gr, soapy
 from gnuradio.eng_arg import eng_float, intx
-from gnuradio import eng_notation
-from gnuradio import soapy
-
-
+from gnuradio.fft import window
+from gnuradio.filter import firdes
 
 
 class fm_scanner(gr.top_block):

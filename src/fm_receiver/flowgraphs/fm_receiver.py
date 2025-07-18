@@ -20,27 +20,18 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-from PyQt5 import Qt
-from gnuradio import qtgui
-from gnuradio.filter import firdes
-import sip
-from gnuradio import analog
-from gnuradio import audio
-from gnuradio import filter
-from gnuradio import gr
-from gnuradio.fft import window
-import sys
 import signal
+import sys
 from argparse import ArgumentParser
+
+import sip
+from gnuradio import analog, audio, eng_notation, filter, gr, qtgui, soapy
 from gnuradio.eng_arg import eng_float, intx
-from gnuradio import eng_notation
-from gnuradio import soapy
+from gnuradio.fft import window
+from gnuradio.filter import firdes
 from gnuradio.qtgui import Range, RangeWidget
-from PyQt5 import QtCore
+from PyQt5 import Qt, QtCore
 
-
-
-from gnuradio import qtgui
 
 class fm_receiver(gr.top_block, Qt.QWidget):
 

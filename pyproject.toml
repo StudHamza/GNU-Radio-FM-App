@@ -5,7 +5,10 @@ description = "GNU Radio FM receiver application"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "black>=25.1.0",
+    "isort>=6.0.1",
     "matplotlib>=3.5.0",
+    "mkdocs>=1.6.1",
 ]
 
 [project.scripts]

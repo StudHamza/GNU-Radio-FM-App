@@ -1,10 +1,11 @@
-from flowgraphs.fm_scanner import fm_scanner
-import numpy as np
-import math
-import sys
-import signal
-import time
 import logging
+import math
+import signal
+import sys
+import time
+
+import numpy as np
+from flowgraphs.fm_scanner import fm_scanner
 
 logger = logging.getLogger(__name__)
 

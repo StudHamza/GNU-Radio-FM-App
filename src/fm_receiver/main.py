@@ -2,11 +2,13 @@
 """
 FM Receiver Application Entry Point
 """
-import sys
 import argparse
-from qtpy.QtWidgets import QApplication
+import sys
+
 from app import FMReceiverApp
+from qtpy.QtWidgets import QApplication
 from utils.logging_config import setup_logging
+
 
 def parse_arguments():
     """Parse command line arguments"""

@@ -2,18 +2,20 @@
 Modern FM Radio Main Window - Cleaned Code
 """
 import logging
-# pylint: disable=no-name-in-module
-from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QTabWidget, QLabel, QPushButton,
-    QLineEdit, QTextEdit, QHBoxLayout, QListWidget, QSpinBox, QCheckBox,
-    QSlider, QGridLayout, QStackedWidget, QButtonGroup, QSizePolicy, QScrollArea,QComboBox
-)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal,pyqtSlot
-from flowgraphs.rds_rx import rds_rx
+
 from core.config_manager import ConfigManager
+from flowgraphs.rds_rx import rds_rx
+# pylint: disable=no-name-in-module
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QGridLayout,
+                             QHBoxLayout, QLabel, QLineEdit, QListWidget,
+                             QMainWindow, QPushButton, QScrollArea,
+                             QSizePolicy, QSlider, QSpinBox, QStackedWidget,
+                             QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+
 from .frequency_slider import FrequencySlider
-from .volume_slider import VolumeSlider
 from .scan_thread import ScannerWorker
+from .volume_slider import VolumeSlider
 
 logger = logging.getLogger(__name__)
 

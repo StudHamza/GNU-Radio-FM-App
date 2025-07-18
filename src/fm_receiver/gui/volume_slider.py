@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QSlider, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QLabel, QSlider, QVBoxLayout, QWidget
 
 
 class VolumeSlider(QWidget):

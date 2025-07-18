@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QFont
-from PyQt5.QtWidgets import QSlider
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel, QSlider,
+                             QVBoxLayout, QWidget)
+
 
 class FrequencySlider(QWidget):
     valueChanged = pyqtSignal(float)

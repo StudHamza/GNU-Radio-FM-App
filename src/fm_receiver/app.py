@@ -2,6 +2,7 @@
 Main FM Receiver Application Class
 """
 import logging
+
 from gui.main_window import MainWindow
 
 logger = logging.getLogger(__name__)
