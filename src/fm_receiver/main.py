@@ -5,6 +5,9 @@ FM Receiver Application Entry Point
 import argparse
 import sys
 
+from flowgraphs import rds_rx_epy_block_0
+sys.modules["rds_rx_epy_block_0"] = rds_rx_epy_block_0
+
 from app import FMReceiverApp
 from qtpy.QtWidgets import QApplication
 from utils.logging_config import setup_logging
@@ -25,6 +28,7 @@ def main():
 
     # Setup logging
     setup_logging(debug=args.debug)
+
 
     # Create Qt application
     app = QApplication(sys.argv)

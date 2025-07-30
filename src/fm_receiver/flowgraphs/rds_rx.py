@@ -20,25 +20,34 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-import math
-import signal
-import sys
-import time
-from argparse import ArgumentParser
-
-import osmosdr
-import rds
-import sip
-from gnuradio import (analog, audio, blocks, digital, eng_notation, fft,
-                      filter, gr, qtgui)
-from gnuradio.eng_arg import eng_float, intx
-from gnuradio.fft import window
+from PyQt5 import Qt
+from gnuradio import qtgui
 from gnuradio.filter import firdes
+import sip
+from gnuradio import analog
+import math
+from gnuradio import audio
+from gnuradio import blocks
+from gnuradio import digital
+from gnuradio import filter
+from gnuradio import fft
+from gnuradio.fft import window
+from gnuradio import gr
+import sys
+import signal
+from argparse import ArgumentParser
+from gnuradio.eng_arg import eng_float, intx
+from gnuradio import eng_notation
 from gnuradio.qtgui import Range, RangeWidget
-from PyQt5 import Qt, QtCore
+from PyQt5 import QtCore
+import osmosdr
+import time
+import rds
+import rds_rx_epy_block_0 as epy_block_0  # embedded python block
 
-from . import rds_rx_epy_block_0 as epy_block_0  # embedded python block
 
+
+from gnuradio import qtgui
 
 class rds_rx(gr.top_block, Qt.QWidget):
 
@@ -205,7 +214,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
-            1024, #size
+            2**11, #size
             samp_rate, #samp_rate
             "", #name
             2, #number of inputs
@@ -455,6 +464,14 @@ class rds_rx(gr.top_block, Qt.QWidget):
             [])
         self.digital_diff_decoder_bb_0 = digital.diff_decoder_bb(2, digital.DIFF_DIFFERENTIAL)
         self.digital_constellation_receiver_cb_0 = digital.constellation_receiver_cb(digital.constellation_bpsk().base(), 2*math.pi / 100, -0.002, 0.002)
+        self.blocks_wavfile_sink_0 = blocks.wavfile_sink(
+            'Output.wav',
+            2,
+            48000,
+            blocks.FORMAT_WAV,
+            blocks.FORMAT_FLOAT,
+            False
+            )
         self.blocks_vector_to_stream_0 = blocks.vector_to_stream(gr.sizeof_float*1, fft_size)
         self.blocks_sub_xx_0 = blocks.sub_ff(1)
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, fft_size)
@@ -489,8 +506,8 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.analog_agc_xx_0, 0), (self.digital_symbol_sync_xx_0, 0))
         self.connect((self.analog_fm_deemph_0_0, 0), (self.blocks_multiply_const_vxx_0_0, 0))
         self.connect((self.analog_fm_deemph_0_0_0, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
+        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.freq_xlating_fir_filter_xxx_1_0, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_freq_sink_x_1, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
@@ -501,8 +518,10 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_xx_1, 0))
         self.connect((self.blocks_delay_0, 0), (self.fir_filter_xxx_1, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.audio_sink_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.blocks_wavfile_sink_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.blocks_multiply_const_vxx_0_0, 0), (self.audio_sink_0, 1))
+        self.connect((self.blocks_multiply_const_vxx_0_0, 0), (self.blocks_wavfile_sink_0, 1))
         self.connect((self.blocks_multiply_const_vxx_0_0, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.blocks_complex_to_imag_0, 0))
         self.connect((self.blocks_multiply_xx_1, 0), (self.fir_filter_xxx_1_0, 0))

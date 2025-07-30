@@ -421,7 +421,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1552.0, 1192]
+    coordinate: [1552.0, 1248]
     rotation: 270
     state: enabled
 - name: blocks_add_xx_0
@@ -672,6 +672,28 @@ blocks:
     bus_structure: null
     coordinate: [1216, 288.0]
     rotation: 0
+    state: true
+- name: blocks_wavfile_sink_0
+  id: blocks_wavfile_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    bits_per_sample1: FORMAT_FLOAT
+    bits_per_sample2: FORMAT_PCM_16
+    bits_per_sample3: FORMAT_VORBIS
+    bits_per_sample4: FORMAT_FLOAT
+    comment: ''
+    file: Output.wav
+    format: FORMAT_WAV
+    nchan: '2'
+    samp_rate: '48000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1280, 1148.0]
+    rotation: 180
     state: true
 - name: digital_constellation_receiver_cb_0
   id: digital_constellation_receiver_cb
@@ -1445,7 +1467,7 @@ blocks:
     marker9: '-1'
     name: '""'
     nconnections: '2'
-    size: '1024'
+    size: 2**11
     srate: samp_rate
     stemplot: 'False'
     style1: '1'
@@ -1484,7 +1506,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1672, 1124.0]
+    coordinate: [1696, 1156.0]
     rotation: 0
     state: true
 - name: qtgui_waterfall_sink_x_0
@@ -2464,8 +2486,10 @@ connections:
 - [blocks_delay_0, '0', blocks_multiply_xx_1, '0']
 - [blocks_delay_0, '0', fir_filter_xxx_1, '0']
 - [blocks_multiply_const_vxx_0, '0', audio_sink_0, '0']
+- [blocks_multiply_const_vxx_0, '0', blocks_wavfile_sink_0, '0']
 - [blocks_multiply_const_vxx_0, '0', qtgui_time_sink_x_0, '1']
 - [blocks_multiply_const_vxx_0_0, '0', audio_sink_0, '1']
+- [blocks_multiply_const_vxx_0_0, '0', blocks_wavfile_sink_0, '1']
 - [blocks_multiply_const_vxx_0_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_multiply_xx_0, '0', blocks_complex_to_imag_0, '0']
 - [blocks_multiply_xx_1, '0', fir_filter_xxx_1_0, '0']

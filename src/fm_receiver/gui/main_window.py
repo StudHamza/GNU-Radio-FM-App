@@ -1,7 +1,9 @@
 """
 Modern FM Radio Main Window - Cleaned Code
 """
+from datetime import datetime
 import logging
+import os
 
 from core.config_manager import ConfigManager
 from flowgraphs.rds_rx import rds_rx
@@ -11,7 +13,7 @@ from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QGridLayout,
                              QHBoxLayout, QLabel, QLineEdit, QListWidget,
                              QMainWindow, QPushButton, QScrollArea,
                              QSizePolicy, QSlider, QSpinBox, QStackedWidget,
-                             QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+                             QTabWidget, QTextEdit, QVBoxLayout, QWidget, QAction)
 
 from .frequency_slider import FrequencySlider
 from .scan_thread import ScannerWorker
@@ -26,15 +28,16 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.config_manager = ConfigManager(config_path)
+        self.volume = 0
         self.mute = True
+        self.recording = False
+        self.outdir = ""
         self.scan_requested = pyqtSignal()
         self.stations = []
         self.fm_receiver = rds_rx()
-        self.load_config(self.fm_receiver)
+        self.load_config()
         self.current_station_freq = self.stations[0]
         self.current_station_index = 0
-        # Start flowgraph and mute by default
-        self.fm_receiver.start()
         self.samp_rate = self.fm_receiver.get_samp_rate()
 
         # Scanning
@@ -91,6 +94,8 @@ class MainWindow(QMainWindow):
         self.audio_debug = self.fm_receiver._qtgui_time_sink_x_0_win
 
         self.setup_ui()
+        #self._init_receiver()
+        self.fm_receiver.start()
         logger.info("Modern FM Radio UI created")
 
     def setup_ui(self):
@@ -98,21 +103,47 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("GNU Radio FM Receiver")
         self.setMinimumSize(1200, 700)
         self.resize(1600, 900)
+
+        # Create the top menu
+        self.create_top_menu()
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         self.main_layout = QVBoxLayout(central_widget)
         self.main_layout.setContentsMargins(10, 10, 10, 10)
         self.main_layout.setSpacing(10)
+
         self.stacked_widget = QStackedWidget()
         self.create_home_widget()
         self.create_stations_widget()
         self.create_debug_widget()
-        self.stacked_widget.addWidget(self.home_widget) # ID 0  -> Home
+
+        self.stacked_widget.addWidget(self.home_widget)    # ID 0 -> Home
         self.stacked_widget.addWidget(self.stations_widget) # ID 1 -> Scan
         self.stacked_widget.addWidget(self.debug_widget)    # ID 2 -> Debug
+
         self.create_bottom_menu()
         self.main_layout.addWidget(self.stacked_widget, 1)
         self.main_layout.addWidget(self.bottom_menu_widget, 0)
+
+
+    def create_top_menu(self):
+        # Create the menu bar
+        menu_bar = self.menuBar()
+
+        # File Menu
+        file_menu = menu_bar.addMenu("File")
+        open_action = QAction("Open", self)
+        save_action = QAction("Save", self)
+        file_menu.addAction(open_action)
+        file_menu.addAction(save_action)
+
+        # Audio Menu
+        audio_menu = menu_bar.addMenu("Audio")
+        play_action = QAction("Play", self)
+        stop_action = QAction("Stop", self)
+        audio_menu.addAction(play_action)
+        audio_menu.addAction(stop_action)
 
     def create_bottom_menu(self):
         """Create bottom menu with proper button group management"""
@@ -297,6 +328,7 @@ class MainWindow(QMainWindow):
         self.record_btn.setText("Record")
         self.record_btn.setMinimumHeight(50)
         self.record_btn.setStyleSheet("font-size: 16px;")
+        self.record_btn.clicked.connect(self.record)
         # Volume slider
         self.volume_slider.setMinimumHeight(50)
         self.volume_slider.volumeChanged.connect(self.set_volume)
@@ -440,6 +472,7 @@ class MainWindow(QMainWindow):
 
     def set_volume(self, value:int):
         # Logic to set volume
+        self.volume = value
         self.volume_slider.setVolume(value)
         mapped_value = max(min(value, 100), 0)
         vol = (mapped_value / 100) * 30 - 20
@@ -496,9 +529,33 @@ class MainWindow(QMainWindow):
 
         self.fm_receiver.set_tau(numeric_value)
 
-    def load_config(self, rx:rds_rx):
+    def record(self):
+        if self.recording is False:
+            self.recording = True
+            self.record_btn.setText("Recording")
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            file_name = os.path.join(self.outdir,f"{current_time}.wav")
+            self.fm_receiver.blocks_wavfile_sink_0.open(file_name)
+        else:
+            self.recording = False
+            self.record_btn.setText("Record")
+            self.fm_receiver.blocks_wavfile_sink_0.close()
+
+
+    def load_config(self):
         self.stations = self.config_manager.get('stations')
-        rx.set_mute(1)
+        self.volume = self.config_manager.get('volume')
+        #self.outdir = self.config_manager.get('outdir')
+        self.outdir = os.path.join((os.getcwd()),"downloads")
+
+    def _init_receiver(self):
+        self.set_freq(self.current_station_freq)
+        self.set_volume(self.volume)
+        self.set_mute(int(self.mute))
+
+        # Close Open file
+        self.fm_receiver.blocks_wavfile_sink_0.close()
+
 
     def save_config(self):
         self.config_manager.set('stations', self.stations)
