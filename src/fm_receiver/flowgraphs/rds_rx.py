@@ -51,7 +51,7 @@ from gnuradio import qtgui
 
 class rds_rx(gr.top_block, Qt.QWidget):
 
-    def __init__(self):
+    def __init__(self, serial=23777405):
         gr.top_block.__init__(self, "Stereo FM receiver and RDS Decoder", catch_exceptions=True)
         Qt.QWidget.__init__(self)
         self.setWindowTitle("Stereo FM receiver and RDS Decoder")
@@ -81,6 +81,11 @@ class rds_rx(gr.top_block, Qt.QWidget):
                 self.restoreGeometry(self.settings.value("geometry"))
         except:
             pass
+
+        ##################################################
+        # Parameters
+        ##################################################
+        self.serial = serial
 
         ##################################################
         # Variables
@@ -136,7 +141,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self._fir_cutoff_win = RangeWidget(self._fir_cutoff_range, self.set_fir_cutoff, "Cutoff Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._fir_cutoff_win)
         self.rtlsdr_source_0_0 = osmosdr.source(
-            args="numchan=" + str(1) + " " + ''
+            args="numchan=" + str(1) + " " + f"rtl={serial}"
         )
         self.rtlsdr_source_0_0.set_time_unknown_pps(osmosdr.time_spec_t())
         self.rtlsdr_source_0_0.set_sample_rate(samp_rate)
@@ -506,8 +511,8 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.analog_agc_xx_0, 0), (self.digital_symbol_sync_xx_0, 0))
         self.connect((self.analog_fm_deemph_0_0, 0), (self.blocks_multiply_const_vxx_0_0, 0))
         self.connect((self.analog_fm_deemph_0_0_0, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 0))
+        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.freq_xlating_fir_filter_xxx_1_0, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_freq_sink_x_1, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
@@ -530,9 +535,9 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.analog_fm_deemph_0_0, 0))
         self.connect((self.blocks_vector_to_stream_0, 0), (self.epy_block_0, 0))
-        self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
-        self.connect((self.digital_constellation_receiver_cb_0, 2), (self.blocks_null_sink_0, 1))
         self.connect((self.digital_constellation_receiver_cb_0, 1), (self.blocks_null_sink_0, 0))
+        self.connect((self.digital_constellation_receiver_cb_0, 2), (self.blocks_null_sink_0, 1))
+        self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
         self.connect((self.digital_constellation_receiver_cb_0, 0), (self.digital_diff_decoder_bb_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 4), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.digital_diff_decoder_bb_0, 0), (self.rds_decoder_0, 0))
@@ -561,6 +566,12 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.wait()
 
         event.accept()
+
+    def get_serial(self):
+        return self.serial
+
+    def set_serial(self, serial):
+        self.serial = serial
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -720,8 +731,14 @@ class rds_rx(gr.top_block, Qt.QWidget):
 
 
 
+def argument_parser():
+    parser = ArgumentParser()
+    return parser
+
 
 def main(top_block_cls=rds_rx, options=None):
+    if options is None:
+        options = argument_parser().parse_args()
 
     if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
         style = gr.prefs().get_string('qtgui', 'style', 'raster')

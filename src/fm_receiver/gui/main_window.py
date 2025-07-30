@@ -256,6 +256,7 @@ class MainWindow(QMainWindow):
         self.title_label.setStyleSheet(
             "font-size: 24px; font-weight: bold; margin-bottom: 20px;"
         )
+        self.title_label.setWordWrap(True)
         layout.addWidget(self.title_label)
 
         # Scrollable area for stations
@@ -375,17 +376,19 @@ class MainWindow(QMainWindow):
     def fm_player(self):
         """Toggle volume on/off"""
         if self.mute: # is muted --> unmute
-            self.set_mute(False)
             self.mute_button.setText("Stop Listening")
+            self.mute_button.setChecked(True)
+            self.set_mute(False)
         else:   # not muted --> mute
             self.mute_button.setText("Listen")
+            self.mute_button.setChecked(False)
             self.set_mute(True)
 
     def scan_mode(self):
-        self.stacked_widget.setCurrentIndex(1)
-        self.stations_button.setChecked(True)
-        self.scan_btn_home.setDisabled(True)
-        self.set_mute(True)
+        self.switch_page(self.stations_button)
+
+        if not self.mute: # If not mutted --> Mute
+            self.fm_player()
 
         # Post scan logic
         self.set_freq(88e6)
@@ -429,6 +432,10 @@ class MainWindow(QMainWindow):
         self.update_display()
         self.scan_btn_home.setDisabled(False)
         self.mute_button.setDisabled(False)
+
+        self.switch_page(self.home_button)
+        self.set_freq(self.stations[0])
+
 
     def update_display(self):
         """Update the stations display"""
