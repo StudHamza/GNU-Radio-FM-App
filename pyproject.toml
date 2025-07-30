@@ -9,6 +9,7 @@ dependencies = [
     "isort>=6.0.1",
     "matplotlib>=3.5.0",
     "mkdocs>=1.6.1",
+    "pyrtlsdr>=0.3.0",
 ]
 
 [project.scripts]

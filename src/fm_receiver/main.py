@@ -11,7 +11,7 @@ sys.modules["rds_rx_epy_block_0"] = rds_rx_epy_block_0
 from app import FMReceiverApp
 from qtpy.QtWidgets import QApplication
 from utils.logging_config import setup_logging
-
+from gui.config_dialog import ConfigDialog
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -35,13 +35,18 @@ def main():
     app.setApplicationName("FM Receiver")
     app.setApplicationVersion("0.1.0")
 
-    # Create and show main application
+    config_dialog = ConfigDialog()
+    result = config_dialog.exec_()  # blocks until user responds
+
+    if result != config_dialog.Accepted:
+        sys.exit(0)
+
+    # If accepted, launch main app
     fm_app = FMReceiverApp(config_path=args.config)
     fm_app.show()
 
     # Run event loop
     sys.exit(app.exec_())
-
 if __name__ == '__main__':
     main()
     
