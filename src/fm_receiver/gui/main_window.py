@@ -1,5 +1,10 @@
 """
-Modern FM Radio Main Window - Cleaned Code
+Modern FM Radio Main Window
+
+This module implements a comprehensive FM Radio application using GNU Radio for
+signal processing and PyQt5 for the graphical user interface. The application
+provides FM radio reception, station scanning, recording capabilities, and
+debugging tools for SDR-based radio reception.
 """
 from datetime import datetime
 import logging
@@ -13,7 +18,7 @@ from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QGridLayout,
                              QHBoxLayout, QLabel, QLineEdit, QListWidget,
                              QMainWindow, QPushButton, QScrollArea,
                              QSizePolicy, QSlider, QSpinBox, QStackedWidget,
-                             QTabWidget, QTextEdit, QVBoxLayout, QWidget, QAction)
+                             QTabWidget, QTextEdit, QVBoxLayout, QWidget, QAction,QFileDialog, QMessageBox)
 
 from .frequency_slider import FrequencySlider
 from .scan_thread import ScannerWorker
@@ -23,8 +28,44 @@ logger = logging.getLogger(__name__)
 
 
 class MainWindow(QMainWindow):
-    """Modern FM Radio Main Window"""   
+    """Modern FM Radio Main Window GUI Controller.
+    
+    This class provides the main user interface for the FM Radio application,
+    integrating GNU Radio signal processing with PyQt5 GUI components. It manages
+    radio reception, station scanning, audio recording, and provides debugging
+    tools for SDR operations.
+    
+    The interface is organized into three main views:
+    - Home: Primary controls and frequency display
+    - Stations: Grid of discovered stations
+    - Debug: Signal analysis and diagnostic tools
+    
+    Attributes:
+        config_manager (ConfigManager): Handles configuration persistence
+        volume (int): Current audio volume level (0-100)
+        mute (bool): Audio mute state flag
+        recording (bool): Recording state flag
+        outdir (str): Directory path for saving recordings
+        stations (list): List of discovered FM frequencies in Hz
+        fm_receiver (rds_rx): GNU Radio flowgraph for FM processing
+        current_station_freq (float): Currently tuned frequency in Hz
+        current_station_index (int): Index of current station in stations list
+        samp_rate (float): SDR sample rate in Hz
+    """
     def __init__(self, config_path:str, sdr_serial:int):
+        """Initialize the FM Radio main window.
+        
+        Sets up the complete FM Radio application including GNU Radio flowgraph,
+        UI components, configuration management, and signal processing chain.
+        
+        Args:
+            config_path (str): Path to configuration file for persistence
+            sdr_serial (int): Serial number/identifier for SDR device
+            
+        Raises:
+            RuntimeError: If GNU Radio flowgraph initialization fails
+            IOError: If configuration file cannot be accessed
+        """
         super().__init__()
 
         self.config_manager = ConfigManager(config_path)
@@ -99,7 +140,12 @@ class MainWindow(QMainWindow):
         logger.info("Modern FM Radio UI created")
 
     def setup_ui(self):
-        """Setup the main user interface"""
+        """Setup the main user interface layout and components.
+        
+        Creates the complete UI structure including menu bar, main content area
+        with stacked widgets for different views, and bottom navigation menu.
+        Establishes the overall window properties and layout hierarchy.
+        """
         self.setWindowTitle("GNU Radio FM Receiver")
         self.setMinimumSize(1200, 700)
         self.resize(1600, 900)
@@ -128,25 +174,31 @@ class MainWindow(QMainWindow):
 
 
     def create_top_menu(self):
-        # Create the menu bar
+        """Create the application menu bar with File menu.
+        
+        Sets up the top-level menu structure with File menu containing
+        recording directory selection functionality.
+        """
         menu_bar = self.menuBar()
 
         # File Menu
         file_menu = menu_bar.addMenu("File")
-        open_action = QAction("Open", self)
-        save_action = QAction("Save", self)
-        file_menu.addAction(open_action)
+        save_action = QAction("Record Directory", self)
         file_menu.addAction(save_action)
 
         # Audio Menu
-        audio_menu = menu_bar.addMenu("Audio")
-        play_action = QAction("Play", self)
-        stop_action = QAction("Stop", self)
-        audio_menu.addAction(play_action)
-        audio_menu.addAction(stop_action)
+        # audio_menu = menu_bar.addMenu("Audio")
+
+        save_action.triggered.connect(self.save_file)
+
 
     def create_bottom_menu(self):
-        """Create bottom menu with proper button group management"""
+        """Create bottom navigation menu with view switching buttons.
+        
+        Sets up the bottom navigation bar with Home, Stations, and Debug
+        buttons using a button group for exclusive selection. Configures
+        button properties and connects switching signals.
+        """
         self.bottom_menu_widget.setFixedHeight(60)
         bottom_menu_layout = QHBoxLayout(self.bottom_menu_widget)
         bottom_menu_layout.setContentsMargins(20, 10, 20, 10)
@@ -171,13 +223,28 @@ class MainWindow(QMainWindow):
         bottom_menu_layout.addWidget(self.debug_button)
         bottom_menu_layout.addStretch()
 
-    def switch_page(self, button):
-        """Switch between pages based on button clicked"""
+    def switch_page(self, button:QPushButton):
+        """Switch between main application views based on button selection.
+        
+        Handles navigation between Home, Stations, and Debug views by
+        updating the stacked widget's current index.
+        
+        Args:
+            button (QPushButton): The navigation button that was clicked
+        """
         button_id = self.menu_button_group.id(button)
         self.stacked_widget.setCurrentIndex(button_id)
 
     def create_debug_widget(self):
-        """Create debug widget"""
+        """Create the debug interface with controls and visualization widgets.
+        
+        Sets up comprehensive debugging interface including:
+        - RF gain and filter controls from GNU Radio flowgraph
+        - Tabbed visualization displays (spectrum, waterfall, constellation)
+        - RDS debugging panel
+        
+        Organizes controls in a grid layout with labeled sections.
+        """
         layout = QVBoxLayout(self.debug_widget)
 
         control_layout = QGridLayout()
@@ -194,7 +261,6 @@ class MainWindow(QMainWindow):
         # === Filter Control ===
         control_layout.addWidget(self.cuttoff_freq_control, 3, 0, 1, 2)
         control_layout.addWidget(self.transition_width_control , 3, 2, 1, 2)
-        # control_layout.addWidget(self.rds_panel_debug, 4, 0, 1, 4)
 
         # # === Demodulation & Filtering ===
         # demod_label = QLabel("Demodulation & Filtering")
@@ -202,13 +268,10 @@ class MainWindow(QMainWindow):
         #     "font-size: 16px; font-weight: bold; margin-bottom: 20px;"
         # )
         # control_layout.addWidget(demod_label, 2, 0, 1, 4)
-        # tau = QComboBox()
-        # tau.addItems(["75u", "50u"])
-        # tau.currentTextChanged.connect(self.tau_control)
-        # control_layout.addWidget(tau, 3, 0, 1, 2, Qt.AlignLeft)  # first control
-
-        # another_control = QSlider(Qt.Horizontal)  # Just an example
-        # control_layout.addWidget(another_control, 3, 2, 1, 2)  # second control
+        tau = QComboBox()
+        tau.addItems(["75u", "50u"])
+        tau.currentTextChanged.connect(self.tau_control)
+        control_layout.addWidget(tau, 4, 0, 1, 2, Qt.AlignLeft)  # first control
 
         # Stereo decoding toggle — mono vs stereo
         # Pilot tone lock indicator (on/off or locked status).
@@ -245,8 +308,12 @@ class MainWindow(QMainWindow):
 
 
     def create_stations_widget(self):
-        """Create stations widget with proper layout and scroll area"""
-
+        """Create the stations selection interface with scrollable grid.
+        
+        Sets up a scrollable grid layout containing buttons for all discovered
+        FM stations. Handles both populated and empty states with appropriate
+        user feedback.
+        """
         layout = QVBoxLayout(self.stations_widget)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
@@ -296,7 +363,12 @@ class MainWindow(QMainWindow):
             self.stations_layout.addWidget(station_btn, row, col)
 
     def create_home_widget(self):
-        """Create home widget"""
+        """Create the main control interface (Home view).
+        
+        Sets up the primary user interface containing frequency display,
+        control buttons, volume slider, RDS information, and manual tuning
+        controls. Arranges all elements in a responsive grid layout.
+        """
         layout = QVBoxLayout(self.home_widget)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(20)
@@ -313,7 +385,12 @@ class MainWindow(QMainWindow):
         layout.addStretch()
 
     def _create_control_buttons(self):
-        """Create main control buttons"""
+        """Create and configure main control buttons.
+        
+        Sets up the primary control buttons including mute/listen toggle,
+        station scanning, recording control, volume slider, and station
+        navigation buttons. Configures styling and connects signal handlers.
+        """
         # Mute Button
         self.mute_button.setText("Listen")
         self.mute_button.setCheckable(True)
@@ -356,7 +433,14 @@ class MainWindow(QMainWindow):
         )
 
     def _arrange_control_layout(self, control_layout:QGridLayout):
-        """Arrange all control elements in the grid layout"""
+        """Arrange all control elements in the home view grid layout.
+        
+        Organizes buttons, displays, and controls in a structured 6-column
+        grid layout with proper spacing and stretch configuration.
+        
+        Args:
+            control_layout (QGridLayout): The grid layout to populate
+        """
         # Row 0
         control_layout.addWidget(self.scan_btn_home, 0, 0, 1, 2)
         control_layout.addWidget(self.record_btn, 0, 2, 1, 2)
@@ -385,6 +469,14 @@ class MainWindow(QMainWindow):
             self.set_mute(True)
 
     def scan_mode(self):
+        """Initiate FM band scanning for station discovery.
+        
+        Starts background scanning process across the FM band (88-108 MHz)
+        to discover available stations. Switches to wideband mode for faster
+        scanning and creates a worker thread for non-blocking operation.
+        Updates UI to show scanning progress and disables controls during scan.
+        """
+
         self.switch_page(self.stations_button)
 
         if not self.mute: # If not mutted --> Mute
@@ -420,7 +512,15 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(bool)
     def scan_finished(self, done:bool):
-        """Handle completion of station scanning"""
+        """Handle completion of station scanning process.
+        
+        Processes the results of the scanning operation, updates the stations
+        list, restores normal receiver mode, and updates the UI. Re-enables
+        controls and switches back to the home view.
+        
+        Args:
+            done (bool): Indicates whether scanning completed successfully
+        """
         logger.info("Done Scanning")
         self.title_label.setText("Avaliable Stations")
 
@@ -438,7 +538,12 @@ class MainWindow(QMainWindow):
 
 
     def update_display(self):
-        """Update the stations display"""
+        """Update the stations display with newly discovered stations.
+        
+        Clears the existing stations grid and repopulates it with buttons
+        for all discovered stations, sorted by frequency. Creates new
+        station buttons with proper styling and signal connections.
+        """
         self.stations = sorted(self.stations)
         while self.stations_layout.count():
             child = self.stations_layout.takeAt(0)
@@ -461,8 +566,16 @@ class MainWindow(QMainWindow):
             self.stations_layout.addWidget(station_btn, row, col)
 
 
-    def _report_progress(self, value):
-        """Report scanning progress"""
+    def _report_progress(self, value:float):
+        """Report scanning progress updates to the user interface.
+        
+        Called by the scanner thread to update the scanning progress display.
+        Updates the current frequency being scanned and accumulates progress
+        information for user feedback.
+        
+        Args:
+            value (float): Current frequency being scanned in Hz
+        """
         self.set_freq(value)
         self.fm_receiver.set_done(0)
         self.scanning_progress +=f"{value/1e6:.1f} MHz, "
@@ -470,7 +583,11 @@ class MainWindow(QMainWindow):
         self.title_label.setText(self.scanning_progress)
 
     def change_channel(self):
-        """Change to selected station and switch to home view"""
+        """Handle station button clicks to change frequency.
+        
+        Extracts the frequency from the clicked station button, tunes to
+        that frequency, and switches to the home view for immediate playback.
+        """
         button = self.sender()
         freq = button.property("frequency")
         self.set_freq(freq)
@@ -478,7 +595,14 @@ class MainWindow(QMainWindow):
         self.home_button.setChecked(True)
 
     def set_volume(self, value:int):
-        # Logic to set volume
+        """Set audio volume level and update display.
+        
+        Maps the UI volume scale (0-100) to the receiver's dB scale and
+        updates both the volume slider display and the GNU Radio receiver.
+        
+        Args:
+            value (int): Volume level from 0-100
+        """
         self.volume = value
         self.volume_slider.setVolume(value)
         mapped_value = max(min(value, 100), 0)
@@ -487,17 +611,34 @@ class MainWindow(QMainWindow):
         return
 
     def get_freq(self):
+        """Get the current tuned frequency.
+        
+        Returns:
+            float: Current frequency in Hz
+        """
         return self.current_station_freq
 
     def set_freq(self, freq):
-        """Set frequency and update display"""
+        """Set the radio frequency and update all related displays.
+        
+        Tunes the GNU Radio receiver to the specified frequency and updates
+        the frequency display label and manual tuning slider position.
+        
+        Args:
+            freq (float): Frequency to tune to in Hz
+        """
         self.freq_label.setText(f"{freq/10**6:.1f} FM")
         self.fm_receiver.set_freq(freq/10**6)
         self.channel_slider.setValue(freq/10**6)
         self.current_station_freq = freq
 
     def previous_station(self):
-        """Navigate to previous station in the list"""
+        """Navigate to the previous station in the discovered stations list.
+        
+        Moves to the previous station in the sorted stations list, wrapping
+        around to the last station if currently on the first. Handles cases
+        where the current frequency is not exactly in the stations list.
+        """
         if not self.stations:
             return
         try:
@@ -515,7 +656,12 @@ class MainWindow(QMainWindow):
         self.current_station_index = previous_index
 
     def next_station(self):
-        """Navigate to next station in the list"""
+        """Navigate to the next station in the discovered stations list.
+        
+        Moves to the next station in the sorted stations list, wrapping
+        around to the first station if currently on the last. Handles cases
+        where the current frequency is not exactly in the stations list.
+        """
         if not self.stations:
             return
         try:
@@ -532,11 +678,25 @@ class MainWindow(QMainWindow):
         self.current_station_index = next_index
 
     def tau_control(self,value):
+        """Control the FM deemphasis time constant (tau).
+        
+        Converts the string representation of tau value to numeric format
+        and configures the GNU Radio receiver's deemphasis filter.
+        
+        Args:
+            value (str): Time constant value (e.g., "75u", "50u")
+        """
         numeric_value = float(value.replace("u", "")) * 1e-6
 
         self.fm_receiver.set_tau(numeric_value)
 
     def record(self):
+        """Toggle audio recording state.
+        
+        Starts or stops audio recording to a timestamped WAV file in the
+        configured output directory. Updates button text to reflect current
+        recording state and manages the GNU Radio WAV file sink.
+        """
         if self.recording is False:
             self.recording = True
             self.record_btn.setText("Recording")
@@ -549,13 +709,42 @@ class MainWindow(QMainWindow):
             self.fm_receiver.blocks_wavfile_sink_0.close()
 
 
+    def save_file(self):
+        """Open directory selection dialog for recording output.
+        
+        Presents a directory selection dialog to the user for choosing where
+        audio recordings should be saved. Updates the output directory path
+        and provides user feedback on the selection status.
+        """
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+
+        if dir_path:
+            self.outdir = dir_path
+            logger.info(f"Output directory set to: {self.outdir}")
+        else:
+            QMessageBox.information(self, "No Directory Selected", "Output directory was not set.")
+
     def load_config(self):
+        """Load application configuration from persistent storage.
+        
+        Retrieves saved settings including station list, volume level, and
+        output directory from the configuration manager. Sets default values
+        for any missing configuration items.
+        """
         self.stations = self.config_manager.get('stations')
         self.volume = self.config_manager.get('volume')
         #self.outdir = self.config_manager.get('outdir')
         self.outdir = os.path.join((os.getcwd()),"downloads")
 
     def _init_receiver(self):
+        """Initialize GNU Radio receiver with current settings.
+        
+        Configures the receiver with the current frequency, volume, and mute
+        settings. Ensures the WAV file sink is properly closed to prevent
+        file handle leaks.
+        
+        Note: This method is currently unused but preserved for future use.
+        """
         self.set_freq(self.current_station_freq)
         self.set_volume(self.volume)
         self.set_mute(int(self.mute))
@@ -565,17 +754,38 @@ class MainWindow(QMainWindow):
 
 
     def save_config(self):
+        """Save current application state to persistent storage.
+        
+        Stores the current stations list, volume setting, and output directory
+        to the configuration manager for restoration on next application start.
+        """
         self.config_manager.set('stations', self.stations)
         self.config_manager.set('volume',self.volume)
         self.config_manager.set('outdir',self.outdir)
         self.config_manager.save()
 
     def set_mute(self,x:bool):
+        """Set the audio mute state in the GNU Radio receiver.
+        
+        Controls audio output by setting the mute parameter in the receiver
+        and updating the internal mute state tracking.
+        
+        Args:
+            mute_state (bool): True to mute audio, False to unmute
+        """
         self.fm_receiver.set_mute(x)
         self.mute = x
 
     def close_event(self, event):
-        """Handle window close event"""
+        """Handle application window close event.
+        
+        Performs cleanup operations before application shutdown including
+        stopping the GNU Radio flowgraph, saving configuration, and ensuring
+        proper resource cleanup.
+        
+        Args:
+            event (QCloseEvent): The close event object from Qt
+        """
         self.fm_receiver.stop()
         self.fm_receiver.wait()
         self.save_config()
