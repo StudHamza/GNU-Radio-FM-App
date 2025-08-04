@@ -10,6 +10,7 @@ Ensure the following dependencies are installed on your system:
 - [gr-rds](https://github.com/bastibl/gr-rds)
 - Python 3.10
 - `numpy`, `matplotlib` (automatically handled by `uv`)
+- SoapySDR (`sudo apt install soapysdr-module-all`)
 
 ## Running the Project
 
