@@ -42,7 +42,9 @@ def main():
         sys.exit(0)
 
     # If accepted, launch main app
-    fm_app = FMReceiverApp(config_path=args.config)
+    sdr_device = config_dialog.get_selected_device()['serial']
+
+    fm_app = FMReceiverApp(config_path=args.config,serial=sdr_device)
     fm_app.show()
 
     # Run event loop

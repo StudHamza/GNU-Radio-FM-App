@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class MainWindow(QMainWindow):
     """Modern FM Radio Main Window"""   
-    def __init__(self, config_path:str):
+    def __init__(self, config_path:str, sdr_serial:int):
         super().__init__()
 
         self.config_manager = ConfigManager(config_path)
@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
         self.outdir = ""
         self.scan_requested = pyqtSignal()
         self.stations = []
-        self.fm_receiver = rds_rx()
+        self.fm_receiver = rds_rx(serial=sdr_serial)
         self.load_config()
         self.current_station_freq = self.stations[0]
         self.current_station_index = 0
@@ -566,6 +566,8 @@ class MainWindow(QMainWindow):
 
     def save_config(self):
         self.config_manager.set('stations', self.stations)
+        self.config_manager.set('volume',self.volume)
+        self.config_manager.set('outdir',self.outdir)
         self.config_manager.save()
 
     def set_mute(self,x:bool):
