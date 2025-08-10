@@ -787,16 +787,16 @@ blocks:
       \          return len(input_items[0])\n        \n        self.data = np.concatenate((self.data,\
       \ input_items[0]))\n\n        if len(self.data) < self.num_items:\n        \
       \    return len(input_items[0])\n        \n        data = self.data\n\n    \
-      \    self.compute_candidate_freqs() \n        print(f\"Scannning at {self.freq}\"\
-      )\n\n        for i in range(0, len(data), self.fft_size):\n            if i\
-      \ + self.fft_size > len(data):\n                break\n                \n  \
-      \          data_chunk = data[i:i+self.fft_size]\n            \n            for\
-      \ j, station_bin in enumerate(self.candidate_freqs_bin):\n                start_bin\
-      \ = int(station_bin - self.half_station_size)\n                end_bin = int(station_bin\
-      \ + self.half_station_size)\n                \n                # Ensure we don't\
-      \ go out of bounds\n                start_bin = max(0, start_bin)\n        \
-      \        end_bin = min(len(data_chunk), end_bin)\n                \n       \
-      \         if start_bin < end_bin:\n                    potential_station = np.sum(np.abs(data_chunk[start_bin:end_bin])**2)\n\
+      \    self.compute_candidate_freqs() \n\n        for i in range(0, len(data),\
+      \ self.fft_size):\n            if i + self.fft_size > len(data):\n         \
+      \       break\n                \n            data_chunk = data[i:i+self.fft_size]\n\
+      \            \n            for j, station_bin in enumerate(self.candidate_freqs_bin):\n\
+      \                start_bin = int(station_bin - self.half_station_size)\n   \
+      \             end_bin = int(station_bin + self.half_station_size)\n        \
+      \        \n                # Ensure we don't go out of bounds\n            \
+      \    start_bin = max(0, start_bin)\n                end_bin = min(len(data_chunk),\
+      \ end_bin)\n                \n                if start_bin < end_bin:\n    \
+      \                potential_station = np.sum(np.abs(data_chunk[start_bin:end_bin])**2)\n\
       \                    self.power_per_station[j] += potential_station\n\n\n  \
       \      normalized_power_per_station = self.normalize(self.power_per_station)\n\
       \n        # Find active stations\n        active_indices = np.where(normalized_power_per_station\
@@ -808,9 +808,7 @@ blocks:
       \          groups.append(group)  # append the last group\n\n        # Pick max\
       \ power freq in each group\n        for group in groups:\n            max_idx\
       \ = group[np.argmax(normalized_power_per_station[group])]\n  \n            self.detected_stations.add(float(self.candidate_freqs[max_idx]))\n\
-      \n        if(self.detected_stations):\n            print(\"All detected:\",\
-      \ sorted(self.detected_stations))\n\n        print(\"Done Scanning\")\n    \
-      \    self.done = 1\n        msg = pmt.cons(pmt.intern(\"value\"), pmt.from_double(1))\n\
+      \n        self.done = 1\n        msg = pmt.cons(pmt.intern(\"value\"), pmt.from_double(1))\n\
       \        self.message_port_pub(pmt.intern(\"done\"), msg)\n\n        self.clean_up()\n\
       \        \t\n        return len(input_items[0])\n\n    def clean_up(self):\n\
       \        self.power_per_station = np.zeros(self.candidate_freqs.size)\n    \
@@ -2042,7 +2040,7 @@ blocks:
     label: serial
     short_id: ''
     type: ''
-    value: '23777405'
+    value: '0'
   states:
     bus_sink: false
     bus_source: false

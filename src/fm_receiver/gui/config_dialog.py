@@ -231,6 +231,11 @@ class ConfigDialog(QDialog):
                     summary = " | ".join(parts) if parts else "SDR Device"
                     self.device_selector.addItem(summary)
 
+                if len(self.devices) == 1:
+                    self.device_selector.setCurrentIndex(0)
+                    self.accept_selection()
+                    return
+
         except Exception as error:
             self.status_label.setText(f"Error scanning devices: {str(error)}")
             self.status_label.setStyleSheet("color: #d32f2f; font-style: italic;")

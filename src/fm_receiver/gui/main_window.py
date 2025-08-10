@@ -12,8 +12,9 @@ import os
 
 from core.config_manager import ConfigManager
 from flowgraphs.rds_rx import rds_rx
+from flowgraphs.MultipleRecorder import MultipleRecorder
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QTimer
 from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QGridLayout,
                              QHBoxLayout, QLabel, QLineEdit, QListWidget,
                              QMainWindow, QPushButton, QScrollArea,
@@ -23,6 +24,8 @@ from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QGridLayout,
 from .frequency_slider import FrequencySlider
 from .scan_thread import ScannerWorker
 from .volume_slider import VolumeSlider
+from .station_button import StationButton
+from .info_window import InfoWindow
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +83,7 @@ class MainWindow(QMainWindow):
         self.current_station_freq = self.stations[0]
         self.current_station_index = 0
         self.samp_rate = self.fm_receiver.get_samp_rate()
+        self.recorders = []
 
         # Scanning
         self.scanning_progress = ""
@@ -135,7 +139,7 @@ class MainWindow(QMainWindow):
         self.audio_debug = self.fm_receiver._qtgui_time_sink_x_0_win
 
         self.setup_ui()
-        #self._init_receiver()
+        self._init_receiver()
         self.fm_receiver.start()
         logger.info("Modern FM Radio UI created")
 
@@ -306,7 +310,6 @@ class MainWindow(QMainWindow):
 
 
 
-
     def create_stations_widget(self):
         """Create the stations selection interface with scrollable grid.
         
@@ -349,17 +352,11 @@ class MainWindow(QMainWindow):
         for i, station in enumerate(self.stations):
             row = i // 2
             col = i % 2
-            station_btn = QPushButton(f"{station/10**6:.1f} FM")
-            station_btn.setProperty("frequency", station)
-            station_btn.setMinimumHeight(50)
-            station_btn.setStyleSheet("""
-                QPushButton {
-                    font-size: 16px;
-                    padding: 10px;
-                    margin: 5px;
-                }
-            """)
+            station_btn = StationButton(station)
             station_btn.clicked.connect(self.change_channel)
+            station_btn.delete_clicked.connect(self.delete_station)
+            station_btn.record_clicked.connect(self.multiple_record)
+
             self.stations_layout.addWidget(station_btn, row, col)
 
     def create_home_widget(self):
@@ -549,21 +546,7 @@ class MainWindow(QMainWindow):
             child = self.stations_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
-        for i, station in enumerate(self.stations):
-            row = i // 2
-            col = i % 2
-            station_btn = QPushButton(f"{station/10**6:.1f} FM")
-            station_btn.setProperty("frequency", station)
-            station_btn.setMinimumHeight(50)
-            station_btn.setStyleSheet("""
-                QPushButton {
-                    font-size: 16px;
-                    padding: 10px;
-                    margin: 5px;
-                }
-            """)
-            station_btn.clicked.connect(self.change_channel)
-            self.stations_layout.addWidget(station_btn, row, col)
+        self._populate_stations()
 
 
     def _report_progress(self, value:float):
@@ -588,11 +571,24 @@ class MainWindow(QMainWindow):
         Extracts the frequency from the clicked station button, tunes to
         that frequency, and switches to the home view for immediate playback.
         """
-        button = self.sender()
-        freq = button.property("frequency")
+        button:StationButton = self.sender()
+        freq = button.get_freq()
+        logger.info(f"Setting Frequency to {freq}")
         self.set_freq(freq)
         self.stacked_widget.setCurrentIndex(0)
         self.home_button.setChecked(True)
+
+    def delete_station(self):
+        """Handles deletion of station
+        
+        Removes the clicked station from the station list and redisplays the list
+        """
+        button:StationButton = self.sender()
+        self.stations.remove(button.get_freq())
+        self.update_display()
+
+    def record_station(self)->None:
+        pass
 
     def set_volume(self, value:int):
         """Set audio volume level and update display.
@@ -708,6 +704,51 @@ class MainWindow(QMainWindow):
             self.record_btn.setText("Record")
             self.fm_receiver.blocks_wavfile_sink_0.close()
 
+    def multiple_record(self):
+        """
+
+        Checks if current button frequency in proximity of the SDR, if so it detection frequency offset and stops the flowgraph to connect a 
+        recorder block.
+        """
+        button:StationButton = self.sender()
+        # Check if can record based on proximity
+        if abs(freq_off:=(self.get_freq()-button.get_freq())) > self.fm_receiver.get_samp_rate():
+            logger.info("Cannot record this frequency")
+            self.info = InfoWindow("This channel is out of your SDR center Frequency proximity",
+                                   timeout=2000)
+            self.info.show()
+            return
+
+        # In proximity
+        #button.set_recording_state(not button.get_recording())
+        # Stop current flowgraph to rewire
+        self.fm_receiver.stop()
+        self.fm_receiver.wait()
+
+        if button.get_recording() is False: # Start Recording
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            file_name = os.path.join(self.outdir,f"{current_time}_{int(button.get_freq())}.wav")
+            logger.info(f"Frequency Offset is {freq_off}")
+            self.recorders.append (MultipleRecorder(
+                    fname=file_name,
+                    freq=self.get_freq(),
+                    freq_offset=int(freq_off),
+                )
+            )
+            self.fm_receiver.connect((self.fm_receiver.blocks_selector_0, 1),
+                                     (self.recorders[0], 0))
+            button.set_recording_state(True)
+
+        else:
+            self.fm_receiver.disconnect((self.fm_receiver.blocks_selector_0, 1),
+                            (self.recorders[0], 0))
+            button.set_recording_state(False)
+
+        self.fm_receiver.start()
+
+
+
+
 
     def save_file(self):
         """Open directory selection dialog for recording output.
@@ -776,7 +817,7 @@ class MainWindow(QMainWindow):
         self.fm_receiver.set_mute(x)
         self.mute = x
 
-    def close_event(self, event):
+    def closeEvent(self, event):
         """Handle application window close event.
         
         Performs cleanup operations before application shutdown including
@@ -786,10 +827,13 @@ class MainWindow(QMainWindow):
         Args:
             event (QCloseEvent): The close event object from Qt
         """
-        self.fm_receiver.stop()
-        self.fm_receiver.wait()
         self.save_config()
+        self.setEnabled(False)
+        try:
+            self.fm_receiver.stop()
+            self.fm_receiver.wait()
+        except Exception as e:
+            logger.exception("Error stopping flowgraph: %s", e)
         logger.info("Application closing")
         event.accept()
-        return None
     

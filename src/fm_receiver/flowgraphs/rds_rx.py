@@ -51,7 +51,7 @@ from gnuradio import qtgui
 
 class rds_rx(gr.top_block, Qt.QWidget):
 
-    def __init__(self, serial=23777405):
+    def __init__(self, serial=0):
         gr.top_block.__init__(self, "Stereo FM receiver and RDS Decoder", catch_exceptions=True)
         Qt.QWidget.__init__(self)
         self.setWindowTitle("Stereo FM receiver and RDS Decoder")

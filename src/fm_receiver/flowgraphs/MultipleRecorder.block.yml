@@ -1,0 +1,43 @@
+id: MultipleRecorder
+label: Multiple Recorder Block
+category: '[GRC Hier Blocks]'
+
+parameters:
+-   id: fname
+    label: File Name
+    dtype: string
+    default: '0'
+    hide: none
+-   id: freq
+    label: 'Center Frequency '
+    dtype: int
+    default: '0'
+    hide: none
+-   id: freq_offset
+    label: frequency offset
+    dtype: int
+    default: '0'
+    hide: none
+
+inputs:
+-   label: in
+    dtype: complex
+    vlen: 1
+
+outputs: []
+
+templates:
+    imports: 'from MultipleRecorder import MultipleRecorder  # grc-generated hier_block'
+    make: "MultipleRecorder(\n    fname=${ fname },\n    freq=${ freq },\n    freq_offset=${\
+        \ freq_offset },\n)"
+    callbacks:
+    - set_fname(${ fname })
+    - set_freq(${ freq })
+    - set_freq_offset(${ freq_offset })
+
+documentation: 'hamza
+
+    /home/hamza/GSOC/FM Application/src/fm_receiver/flowgraphs/MultipleRecorder.py'
+grc_source: /home/hamza/GSOC/FM Application/src/fm_receiver/flowgraphs/Recorder.grc
+
+file_format: 1
