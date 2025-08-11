@@ -97,3 +97,5 @@ packaging/dist/
 *.temp
 .temp/
 site/
+
+*.wav
