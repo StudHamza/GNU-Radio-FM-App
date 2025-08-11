@@ -706,47 +706,102 @@ class MainWindow(QMainWindow):
 
     def multiple_record(self):
         """
+        Handles starting or stopping a recording session for a specific station button.
 
-        Checks if current button frequency in proximity of the SDR, if so it detection frequency offset and stops the flowgraph to connect a 
-        recorder block.
+        This method:
+        1. Checks if the station's frequency is within the tunable bandwidth of the SDR 
+            (based on the sample rate). If it's too far from the SDR center frequency, 
+            recording is not allowed.
+        2. Stops the running FM receiver flowgraph to reconfigure connections for recording.
+        3. If the station is not already recording:
+            - Creates a new MultipleRecorder instance for the station's frequency.
+            - Connects the FM receiver's output to the recorder.
+            - Updates the button's state to "recording".
+            If the station is already recording:
+            - Disconnects the recorder from the FM receiver.
+            - Updates the button's state to "not recording".
+        4. Restarts the FM receiver flowgraph after changes.
         """
-        button:StationButton = self.sender()
-        # Check if can record based on proximity
-        if abs(freq_off:=(self.get_freq()-button.get_freq())) > self.fm_receiver.get_samp_rate():
+
+        # Identify which station button triggered the function
+        button: StationButton = self.sender()
+
+        # Calculate the frequency offset between the SDR's tuned frequency 
+        # and the button's target frequency.
+        freq_off = self.get_freq() - button.get_freq()
+
+        # If the offset is greater than the SDR's sample rate, 
+        # the target frequency is out of range for recording.
+        if abs(freq_off) > self.fm_receiver.get_samp_rate():
             logger.info("Cannot record this frequency")
-            self.info = InfoWindow("This channel is out of your SDR center Frequency proximity",
-                                   timeout=2000)
+            self.info = InfoWindow(
+                "This channel is out of your SDR center frequency proximity",
+                timeout=2000
+            )
             self.info.show()
             return
 
-        # In proximity
-        #button.set_recording_state(not button.get_recording())
-        # Stop current flowgraph to rewire
+        # Stop the FM receiver flowgraph before reconfiguring connections
         self.fm_receiver.stop()
         self.fm_receiver.wait()
 
-        if button.get_recording() is False: # Start Recording
+        if not button.get_recording():
+            # --- Start Recording ---
+            # Generate timestamped filename for recording
             current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            file_name = os.path.join(self.outdir,f"{current_time}_{int(button.get_freq())}.wav")
-            logger.info(f"Frequency Offset is {freq_off}")
-            self.recorders.append (MultipleRecorder(
+            file_name = os.path.join(
+                self.outdir,
+                f"{current_time}_{int(button.get_freq())}.wav"
+            )
+
+            # Create and store the recorder instance, tuned with frequency offset
+            self.recorders.append(
+                MultipleRecorder(
                     fname=file_name,
-                    freq=self.get_freq(),
+                    freq=self.get_freq() + int(freq_off),
                     freq_offset=int(freq_off),
                 )
             )
-            self.fm_receiver.connect((self.fm_receiver.blocks_selector_0, 1),
-                                     (self.recorders[0], 0))
+
+            # Connect FM receiver's output channel to the new recorder
+            self.fm_receiver.connect(
+                (self.fm_receiver.blocks_selector_0, 1),
+                (self.recorders[0], 0)
+            )
+
+            # Update UI button state to reflect active recording
             button.set_recording_state(True)
 
         else:
-            self.fm_receiver.disconnect((self.fm_receiver.blocks_selector_0, 1),
-                            (self.recorders[0], 0))
+            # --- Stop Recording ---
+            current_recorder: MultipleRecorder = None
+
+            # Locate the recorder instance corresponding to this button's frequency
+            for recorder in self.recorders:
+                if recorder.get_freq() == button.get_freq():
+                    current_recorder = recorder
+                    break
+
+            # Disconnect the recorder from the FM receiver
+            self.fm_receiver.disconnect(
+                (self.fm_receiver.blocks_selector_0, 1),
+                (current_recorder, 0)
+            )
+
+            # Update UI button state to reflect stopped recording
             button.set_recording_state(False)
 
+        # Restart the FM receiver flowgraph after connection changes
         self.fm_receiver.start()
 
 
+    def stop_all_recordings(self):
+        """
+        This function will stop any current recording streams.
+        
+        """
+
+        return
 
 
 

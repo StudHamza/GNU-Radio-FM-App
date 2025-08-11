@@ -85,23 +85,6 @@ blocks:
     coordinate: [456, 212.0]
     rotation: 0
     state: true
-- name: audio_sink_0
-  id: audio_sink
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    device_name: ''
-    num_inputs: '1'
-    ok_to_block: 'True'
-    samp_rate: '48000'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1040, 300.0]
-    rotation: 0
-    state: true
 - name: blocks_wavfile_sink_0
   id: blocks_wavfile_sink
   parameters:
@@ -265,7 +248,6 @@ connections:
 - [freq_xlating_fir_filter_xxx_0, '0', analog_quadrature_demod_cf_0, '0']
 - [low_pass_filter_0, '0', rational_resampler_xxx_0, '0']
 - [pad_source_0, '0', freq_xlating_fir_filter_xxx_0, '0']
-- [rational_resampler_xxx_0, '0', audio_sink_0, '0']
 - [rational_resampler_xxx_0, '0', blocks_wavfile_sink_0, '0']
 
 metadata:

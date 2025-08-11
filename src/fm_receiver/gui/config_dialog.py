@@ -1,17 +1,24 @@
-"""SDR Configuration Dialog Module"""
+"""SDR Configuration Dialog Module with Enhanced Auto-Selection"""
 
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QFrame
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 import SoapySDR
 
 
 class ConfigDialog(QDialog):
     """Dialog for configuring SDR devices"""
 
-    def __init__(self):
+    def __init__(self, auto_select_single=True, auto_close_delay=500):
+        """
+        Initialize the configuration dialog
+        
+        Args:
+            auto_select_single (bool): Automatically select if only one device found
+            auto_close_delay (int): Delay in milliseconds before auto-closing (0 to disable)
+        """
         super().__init__()
         self.setWindowTitle("SDR Configuration")
         self.setMinimumWidth(400)
@@ -22,6 +29,11 @@ class ConfigDialog(QDialog):
         self.status_label = None
         self.accept_button = None
         self.rescan_button = None
+        self.auto_select_single = auto_select_single
+        self.auto_close_delay = auto_close_delay
+        self.auto_close_timer = QTimer()
+        self.auto_close_timer.setSingleShot(True)
+        self.auto_close_timer.timeout.connect(self.accept)
         self.setup_ui()
         self.scan_devices()
 
@@ -172,6 +184,9 @@ class ConfigDialog(QDialog):
 
     def scan_devices(self):
         """Scan for SDR devices and populate the combo box"""
+        # Stop any existing auto-close timer
+        self.auto_close_timer.stop()
+        
         self.rescan_button.setEnabled(False)
         self.rescan_button.setText("Scanning...")
         self.status_label.setText("Scanning for SDR devices...")
@@ -231,9 +246,24 @@ class ConfigDialog(QDialog):
                     summary = " | ".join(parts) if parts else "SDR Device"
                     self.device_selector.addItem(summary)
 
-                if len(self.devices) == 1:
+                # Auto-select single device
+                if len(self.devices) == 1 and self.auto_select_single:
                     self.device_selector.setCurrentIndex(0)
-                    self.accept_selection()
+                    self.selected_device = self.devices[0]
+                    
+                    # Update status to show auto-selection
+                    self.status_label.setText(
+                        f"Auto-selected single SDR device" + 
+                        (f" (closing in {self.auto_close_delay//1000}s)" if self.auto_close_delay > 0 else "")
+                    )
+                    self.status_label.setStyleSheet("color: #1976d2; font-style: italic; font-weight: bold;")
+                    
+                    # Auto-close after delay if enabled
+                    if self.auto_close_delay > 0:
+                        self.auto_close_timer.start(self.auto_close_delay)
+                    else:
+                        # If no delay, close immediately
+                        self.accept()
                     return
 
         except Exception as error:
@@ -247,6 +277,9 @@ class ConfigDialog(QDialog):
 
     def accept_selection(self):
         """Accept the selected device and close dialog"""
+        # Stop auto-close timer if running
+        self.auto_close_timer.stop()
+        
         if self.devices and self.device_selector.currentIndex() >= 0:
             index = self.device_selector.currentIndex()
             self.selected_device = self.devices[index]
@@ -260,4 +293,9 @@ class ConfigDialog(QDialog):
             dict or None: Selected device dictionary or None if no selection
         """
         return self.selected_device
-    
+
+    def closeEvent(self, event):
+        """Handle dialog close event"""
+        # Stop auto-close timer
+        self.auto_close_timer.stop()
+        event.accept()

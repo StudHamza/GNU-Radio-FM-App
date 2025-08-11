@@ -10,7 +10,6 @@
 
 from gnuradio import analog
 import math
-from gnuradio import audio
 from gnuradio import blocks
 from gnuradio import filter
 from gnuradio.filter import firdes
@@ -73,7 +72,6 @@ class MultipleRecorder(gr.hier_block2):
             blocks.FORMAT_PCM_16,
             False
             )
-        self.audio_sink_0 = audio.sink(48000, '', True)
         self.analog_quadrature_demod_cf_0 = analog.quadrature_demod_cf((samp_rate / decimation) / (2*math.pi*75000))
 
 
@@ -84,7 +82,6 @@ class MultipleRecorder(gr.hier_block2):
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_quadrature_demod_cf_0, 0))
         self.connect((self.low_pass_filter_0, 0), (self.rational_resampler_xxx_0, 0))
         self.connect((self, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
-        self.connect((self.rational_resampler_xxx_0, 0), (self.audio_sink_0, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.blocks_wavfile_sink_0, 0))
 
 
