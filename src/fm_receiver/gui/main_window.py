@@ -84,6 +84,8 @@ class MainWindow(QMainWindow):
         self.current_station_index = 0
         self.samp_rate = self.fm_receiver.get_samp_rate()
         self.recorders = []
+        self.recorders_buttons = [] # List of station buttons that are actively recording
+        self.info:InfoWindow = None
 
         # Scanning
         self.scanning_progress = ""
@@ -474,7 +476,7 @@ class MainWindow(QMainWindow):
         Updates UI to show scanning progress and disables controls during scan.
         """
 
-        self.switch_page(self.stations_button)
+        self.stations_button.click()
 
         if not self.mute: # If not mutted --> Mute
             self.fm_player()
@@ -573,7 +575,6 @@ class MainWindow(QMainWindow):
         """
         button:StationButton = self.sender()
         freq = button.get_freq()
-        logger.info(f"Setting Frequency to {freq}")
         self.set_freq(freq)
         self.stacked_widget.setCurrentIndex(0)
         self.home_button.setChecked(True)
@@ -618,11 +619,13 @@ class MainWindow(QMainWindow):
         """Set the radio frequency and update all related displays.
         
         Tunes the GNU Radio receiver to the specified frequency and updates
-        the frequency display label and manual tuning slider position.
+        the frequency display label and manual tuning slider position. It is
+        also responsible to stop all current recording before changing frequency
         
         Args:
             freq (float): Frequency to tune to in Hz
         """
+        self.stop_all_recordings()
         self.freq_label.setText(f"{freq/10**6:.1f} FM")
         self.fm_receiver.set_freq(freq/10**6)
         self.channel_slider.setValue(freq/10**6)
@@ -726,11 +729,11 @@ class MainWindow(QMainWindow):
         # Identify which station button triggered the function
         button: StationButton = self.sender()
 
-        # Calculate the frequency offset between the SDR's tuned frequency 
+        # Calculate the frequency offset between the SDR's tuned frequency
         # and the button's target frequency.
         freq_off = self.get_freq() - button.get_freq()
 
-        # If the offset is greater than the SDR's sample rate, 
+        # If the offset is greater than the SDR's sample rate,
         # the target frequency is out of range for recording.
         if abs(freq_off) > self.fm_receiver.get_samp_rate():
             logger.info("Cannot record this frequency")
@@ -755,10 +758,10 @@ class MainWindow(QMainWindow):
             )
 
             # Create and store the recorder instance, tuned with frequency offset
-            self.recorders.append(
+            self.recorders.append(recorder:=
                 MultipleRecorder(
                     fname=file_name,
-                    freq=self.get_freq() + int(freq_off),
+                    freq=button.get_freq(),
                     freq_offset=int(freq_off),
                 )
             )
@@ -766,11 +769,16 @@ class MainWindow(QMainWindow):
             # Connect FM receiver's output channel to the new recorder
             self.fm_receiver.connect(
                 (self.fm_receiver.blocks_selector_0, 1),
-                (self.recorders[0], 0)
+                (recorder, 0)
             )
 
             # Update UI button state to reflect active recording
             button.set_recording_state(True)
+
+            # Save in actively recording buttons
+            self.recorders_buttons.append(button)
+
+            logger.info(f"Started Recording station {button.get_freq()}")
 
         else:
             # --- Stop Recording ---
@@ -780,7 +788,13 @@ class MainWindow(QMainWindow):
             for recorder in self.recorders:
                 if recorder.get_freq() == button.get_freq():
                     current_recorder = recorder
+                    self.recorders.remove(current_recorder)
+                    # Save in actively recording buttons
                     break
+
+            if current_recorder is None:
+                logger.error(f"Could not find active recorder")
+                return
 
             # Disconnect the recorder from the FM receiver
             self.fm_receiver.disconnect(
@@ -791,6 +805,8 @@ class MainWindow(QMainWindow):
             # Update UI button state to reflect stopped recording
             button.set_recording_state(False)
 
+            self.recorders_buttons.remove(button)
+
         # Restart the FM receiver flowgraph after connection changes
         self.fm_receiver.start()
 
@@ -798,9 +814,48 @@ class MainWindow(QMainWindow):
     def stop_all_recordings(self):
         """
         This function will stop any current recording streams.
-        
         """
+        if len(self.recorders) > 0:
+            # Stop the FM receiver flowgraph before making changes
+            self.fm_receiver.stop()
+            self.fm_receiver.wait()
 
+            # Copy lists to avoid modification during iteration
+            recorders_to_stop = self.recorders.copy()
+            buttons_to_update = self.recorders_buttons.copy()
+
+            # Stop all recordings
+            for recorder in recorders_to_stop:
+                # Disconnect the recorder from the FM receiver
+                try:
+                    self.fm_receiver.disconnect(
+                        (self.fm_receiver.blocks_selector_0, 1),
+                        (recorder, 0)
+                    )
+                except Exception as e:
+                    logger.warning(f"Error disconnecting recorder: {e}")
+
+            # Update button states
+            for button in buttons_to_update:
+                button.set_recording_state(False)
+
+            # Clear the recording lists
+            self.recorders.clear()
+            self.recorders_buttons.clear()
+
+            # Restart the FM receiver flowgraph
+            self.fm_receiver.start()
+
+            self.info = InfoWindow(
+                "All recording stopped",
+                timeout=2000
+            )
+            self.info.show()
+            
+            logger.info(f"Stopped {len(recorders_to_stop)} recordings")
+        else:
+            logger.info("No active recordings to stop")
+        
         return
 
 
