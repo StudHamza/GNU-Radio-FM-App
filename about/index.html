@@ -43,6 +43,10 @@
                 <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
                 </li>
               </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorials/">Tutorials</a>
+                </li>
+              </ul>
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="#">About</a>
     <ul class="current">
@@ -87,36 +91,6 @@
     <li class="toctree-l3"><a class="reference internal" href="#signal-processing">Signal Processing</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#hardware-support">Hardware Support</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#installation-guide">Installation Guide</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#running-the-project">Running the Project</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#using-uv">Using uv</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#usage-guide">Usage Guide</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#first-launch">First Launch</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#basic-operation">Basic Operation</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#advanced-features_1">Advanced Features</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#configuration-file-structure">Configuration File Structure</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#customization-options">Customization Options</a>
     </li>
         </ul>
     </li>
@@ -259,62 +233,6 @@
 <li><strong>USRP</strong>: Universal Software Radio Peripheral</li>
 <li><strong>BladeRF</strong>: High-performance SDR platform</li>
 </ul>
-<h2 id="installation-guide">Installation Guide</h2>
-<h3 id="requirements">Requirements</h3>
-<p>Ensure the following dependencies are installed on your system:</p>
-<ul>
-<li><a href="https://www.gnuradio.org/">GNU Radio</a></li>
-<li><a href="https://github.com/bastibl/gr-rds">gr-rds</a></li>
-<li>Python 3.10</li>
-<li><code>numpy</code>, <code>matplotlib</code> (automatically handled by <code>uv</code>)</li>
-</ul>
-<h2 id="running-the-project">Running the Project</h2>
-<h3 id="using-uv">Using <a href="https://docs.astral.sh/uv/getting-started/">uv</a></h3>
-<ol>
-<li>Install <code>uv</code> by following the <a href="https://docs.astral.sh/uv/getting-started/installation/">installation guide</a>.</li>
-<li>Make sure GNU Radio and <code>gr-rds</code> are properly installed on your system.</li>
-<li>Run the FM receiver:</li>
-</ol>
-<pre><code class="language-bash">uv run src/fm_receiver/main.py
-</code></pre>
-<p>Note: Ensure your virtual environment is created with system site packages enabled:</p>
-<pre><code class="language-bash">python3 -m venv .venv --system-site-packages
-</code></pre>
-<h2 id="usage-guide">Usage Guide</h2>
-<h3 id="first-launch"><strong>First Launch</strong></h3>
-<ol>
-<li>Connect your SDR hardware to a USB port</li>
-<li>Launch the application with your SDR's serial number</li>
-<li>Click "Scan Stations" to discover local FM stations</li>
-</ol>
-<h3 id="basic-operation"><strong>Basic Operation</strong></h3>
-<ul>
-<li><strong>Tuning</strong>: Use the frequency slider or station buttons</li>
-<li><strong>Volume</strong>: Adjust using the vertical volume slider</li>
-<li><strong>Recording</strong>: Click "Record" to start/stop audio capture</li>
-<li><strong>Navigation</strong>: Use Previous/Next buttons for station hopping</li>
-</ul>
-<h3 id="advanced-features_1"><strong>Advanced Features</strong></h3>
-<ul>
-<li><strong>Debug Mode</strong>: Access spectrum analyzers and signal diagnostics</li>
-<li><strong>Manual Tuning</strong>: Fine-tune frequency using the slider control</li>
-<li><strong>RDS Information</strong>: View station metadata when available</li>
-</ul>
-<h2 id="configuration">Configuration</h2>
-<h3 id="configuration-file-structure"><strong>Configuration File Structure</strong></h3>
-<pre><code class="language-json">{
-    &quot;stations&quot;: [88100000, 92500000, 101100000],
-    &quot;volume&quot;: 75,
-    &quot;output_directory&quot;: &quot;/home/user/recordings&quot;,
-}
-</code></pre>
-<h3 id="customization-options"><strong>Customization Options</strong></h3>
-<ul>
-<li>Station presets and favorites</li>
-<li>Audio output device selection</li>
-<li>Recording format and quality settings</li>
-<li>UI theme and layout preferences</li>
-</ul>
 <h2 id="contributing">Contributing</h2>
 <p>This project is part of gsoc 2025 under GNU Radio organization, and contribution is welcomed </p>
 <h3 id="areas-for-contribution"><strong>Areas for Contribution</strong></h3>
@@ -346,7 +264,7 @@
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href=".." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../tutorials/" class="btn btn-neutral float-left" title="Tutorials"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
 
   <hr/>
@@ -369,7 +287,7 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../tutorials/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
   </span>

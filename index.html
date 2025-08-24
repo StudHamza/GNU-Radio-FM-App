@@ -42,7 +42,29 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="#">Home</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#running-the-project">Running the Project</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#using-uv">Using uv</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#home-page">Home Page</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#station-list">Station List</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#debug-view">Debug View</a>
+    </li>
     </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="tutorials/">Tutorials</a>
                 </li>
               </ul>
               <ul>
@@ -73,12 +95,132 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="welcome-to-gnu-radio-fm-application">Welcome to GNU Radio FM application</h1>
-<p>This project demonsrates how to use GNU Radio flowgraphs to abstract the singal processing back end from your application frontend.</p>
+<p align="center">
+  <a href="https://www.gnuradio.org/">
+    <img src="https://www.gnuradio.org/gnuradio_logo_glyphs_as_paths.svg" alt="GNU Radio Logo" height="150">
+  </a>
+  <!-- only-mkdocs -->
+</p>
+
+<p align="center">
+    <em>GNU Radio – A free & open-source toolkit for software radio development.</em>
+</p>
+
+<hr />
+<p>This project demonstrates how to use GNU Radio flow graphs to abstract the signal processing back end from your application frontend to build a modern functional application in no time.</p>
+<p>The key features of this project are:</p>
+<ol>
+<li><strong>Spectrum Scanning and FM Detection</strong></li>
+<li><strong>RDS Decoding</strong></li>
+<li><strong>Advance Usage of GNU Radio flowgraphs</strong></li>
+<li><strong>Multiple Streaming Functionality</strong></li>
+</ol>
+<p>The project directory is: </p>
+<pre><code class="language-bash">├── config
+│   └── config.json
+├── docs
+│   ├── about.md
+│   ├── img/
+│   │   └── favicon.ico
+│   └── index.md
+├── downloads
+│   └── 2025-08-18_09-01-32.wav
+├── LICENSE
+├── mkdocs.yml
+├── Output.wav
+├── pyproject.toml
+├── README.md
+├── requirements.txt
+├── src
+│   └── fm_receiver
+│       ├── app.py
+│       ├── core/
+│       │   ├── config_manager.py
+│       │   └── __pycache__/...
+│       ├── flowgraphs/
+│       │   ├── fm_receiver.py
+│       │   ├── fm_scanner.{grc,py}
+│       │   ├── MultipleRecorder.{block.yml,py}
+│       │   ├── rds_rx.{grc,py}
+│       │   ├── Recorder.grc
+│       │   ├── rds_rx_epy_block_0.py
+│       │   └── __pycache__/...
+│       ├── gui/
+│       │   ├── config_dialog.py
+│       │   ├── frequency_slider.py
+│       │   ├── info_window.py
+│       │   ├── main_window.py
+│       │   ├── scan_thread.py
+│       │   ├── station_button.py
+│       │   ├── volume_slider.py
+│       │   └── __pycache__/...
+│       ├── main.py
+│       ├── resources/icons/record.png
+│       ├── utils/
+│       │   ├── fm_scanner.py
+│       │   ├── logging_config.py
+│       │   └── __pycache__/...
+│       └── __pycache__/...
+├── structure.txt
+└── uv.lock
+</code></pre>
+<h2 id="installation">Installation</h2>
+<h3 id="requirements">Requirements</h3>
+<p>Ensure the following dependencies are installed on your system:</p>
+<ul>
+<li><a href="https://www.gnuradio.org/">GNU Radio</a></li>
+<li><a href="https://github.com/bastibl/gr-rds">gr-rds</a></li>
+<li><a href="https://docs.astral.sh/uv/getting-started/">uv</a></li>
+<li>Python 3.10</li>
+<li><code>numpy</code>, <code>matplotlib</code> (automatically handled by <code>uv</code>)</li>
+<li>SoapySDR (<code>sudo apt install soapysdr-module-all</code>)</li>
+</ul>
+<h2 id="running-the-project">Running the Project</h2>
+<h3 id="using-uv">Using <a href="https://docs.astral.sh/uv/getting-started/">uv</a></h3>
+<ol>
+<li>Install <code>uv</code> by following the <a href="https://docs.astral.sh/uv/getting-started/installation/">installation guide</a>.</li>
+<li>Make sure GNU Radio and <code>gr-rds</code> are properly installed on your system.</li>
+<li>Run the FM receiver:</li>
+</ol>
+<pre><code class="language-bash">uv run src/fm_receiver/main.py
+</code></pre>
+<p>Note: Before running, ensure your virtual environment is created with system site packages enabled:</p>
+<pre><code class="language-bash">python3 -m venv .venv --system-site-packages
+</code></pre>
+<p>After running, you should be prompted with the SDR config manager that allows you to choose from attached devices.</p>
+<p float="left">
+  <img src="img/sdr_config.png" width="300" /> &nbsp;
+  <img src="img/sdr_config_2.png" width="300" />
+</p>
+
+<h2 id="home-page">Home Page</h2>
+<p>In the home page you can listen to different stations, the next and previous buttons lets you jump between adjacent stations. </p>
+<p><img alt="Home Page View" src="img/app.png" /></p>
+<p>The RDS information is displayed at the button, along with a frequency slider that shows you what frequency you're listening too. You can also record current sessions and scan area for possible FM stations.</p>
+<h2 id="station-list">Station List</h2>
+<p>The station list view allows you to jump arbitrary between stations. It also has a recording functionality for multiple stream recording.</p>
+<p><img alt="Station Page View" src="img/station_list.png" /></p>
+<h2 id="debug-view">Debug View</h2>
+<p>The debug view allows you to control specific elements of the receiver. Especially :</p>
+<ol>
+<li>RF Gain</li>
+<li>Filter Cut off-frequency and transition width</li>
+<li><a href="https://ham.stackexchange.com/questions/9163/pre-emphasis-measurement">Tau</a> Pre-emphasis / De-emphasis Networks</li>
+</ol>
+<p><img alt="Station Page View" src="img/debug.png" /></p>
+<p>It also features 5 views of the received signal, including </p>
+<ol>
+<li>FM Demodulated Signal</li>
+<li>Waterfall display of demodulated signal</li>
+<li>L+R stereo display </li>
+<li>RDS Constellation </li>
+<li>Audio Display</li>
+</ol>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="about/" class="btn btn-neutral float-right" title="About">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="tutorials/" class="btn btn-neutral float-right" title="Tutorials">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -102,7 +244,7 @@
     
     
     
-      <span><a href="about/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="tutorials/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
@@ -122,5 +264,5 @@
 
 <!--
 MkDocs version : 1.6.1
-Build Date UTC : 2025-08-04 11:01:18.699033+00:00
+Build Date UTC : 2025-08-24 11:26:22.181158+00:00
 -->
