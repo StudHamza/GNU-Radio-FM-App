@@ -51,7 +51,7 @@ from gnuradio import qtgui
 
 class rds_rx(gr.top_block, Qt.QWidget):
 
-    def __init__(self, serial=0):
+    def __init__(self, device_arguments='0'):
         gr.top_block.__init__(self, "Stereo FM receiver and RDS Decoder", catch_exceptions=True)
         Qt.QWidget.__init__(self)
         self.setWindowTitle("Stereo FM receiver and RDS Decoder")
@@ -85,7 +85,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         ##################################################
         # Parameters
         ##################################################
-        self.serial = serial
+        self.device_arguments = device_arguments
 
         ##################################################
         # Variables
@@ -141,7 +141,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self._fir_cutoff_win = RangeWidget(self._fir_cutoff_range, self.set_fir_cutoff, "Cutoff Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._fir_cutoff_win)
         self.rtlsdr_source_0_0 = osmosdr.source(
-            args="numchan=" + str(1) + " " + f"rtl={serial}"
+            args="numchan=" + str(1) + " " + device_arguments
         )
         self.rtlsdr_source_0_0.set_time_unknown_pps(osmosdr.time_spec_t())
         self.rtlsdr_source_0_0.set_sample_rate(samp_rate)
@@ -511,8 +511,8 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.analog_agc_xx_0, 0), (self.digital_symbol_sync_xx_0, 0))
         self.connect((self.analog_fm_deemph_0_0, 0), (self.blocks_multiply_const_vxx_0_0, 0))
         self.connect((self.analog_fm_deemph_0_0_0, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 0))
+        self.connect((self.analog_pll_refout_cc_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.freq_xlating_fir_filter_xxx_1_0, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_freq_sink_x_1, 0))
         self.connect((self.analog_quadrature_demod_cf_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
@@ -536,8 +536,8 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_sub_xx_0, 0), (self.analog_fm_deemph_0_0, 0))
         self.connect((self.blocks_vector_to_stream_0, 0), (self.epy_block_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
-        self.connect((self.digital_constellation_receiver_cb_0, 1), (self.blocks_null_sink_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 2), (self.blocks_null_sink_0, 1))
+        self.connect((self.digital_constellation_receiver_cb_0, 1), (self.blocks_null_sink_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 0), (self.digital_diff_decoder_bb_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 4), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.digital_diff_decoder_bb_0, 0), (self.rds_decoder_0, 0))
@@ -567,11 +567,11 @@ class rds_rx(gr.top_block, Qt.QWidget):
 
         event.accept()
 
-    def get_serial(self):
-        return self.serial
+    def get_device_arguments(self):
+        return self.device_arguments
 
-    def set_serial(self, serial):
-        self.serial = serial
+    def set_device_arguments(self, device_arguments):
+        self.device_arguments = device_arguments
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -733,6 +733,9 @@ class rds_rx(gr.top_block, Qt.QWidget):
 
 def argument_parser():
     parser = ArgumentParser()
+    parser.add_argument(
+        "--device-arguments", dest="device_arguments", type=str, default='0',
+        help="Set 0 [default=%(default)r]")
     return parser
 
 
@@ -745,7 +748,7 @@ def main(top_block_cls=rds_rx, options=None):
         Qt.QApplication.setGraphicsSystem(style)
     qapp = Qt.QApplication(sys.argv)
 
-    tb = top_block_cls()
+    tb = top_block_cls(device_arguments=options.device_arguments)
 
     tb.start()
 

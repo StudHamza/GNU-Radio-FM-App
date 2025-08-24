@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         current_station_index (int): Index of current station in stations list
         samp_rate (float): SDR sample rate in Hz
     """
-    def __init__(self, config_path:str, sdr_serial:int):
+    def __init__(self, config_path:str, sdr_device:str):
         """Initialize the FM Radio main window.
         
         Sets up the complete FM Radio application including GNU Radio flowgraph,
@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
         
         Args:
             config_path (str): Path to configuration file for persistence
-            sdr_serial (int): Serial number/identifier for SDR device
+            sdr_device (str): Device name, Serial number/identifier for SDR device
             
         Raises:
             RuntimeError: If GNU Radio flowgraph initialization fails
@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         self.outdir = ""
         self.scan_requested = pyqtSignal()
         self.stations = []
-        self.fm_receiver = rds_rx(serial=sdr_serial)
+        self.fm_receiver = rds_rx(device_arguments=sdr_device)
         self.load_config()
         self.current_station_freq = self.stations[0]
         self.current_station_index = 0

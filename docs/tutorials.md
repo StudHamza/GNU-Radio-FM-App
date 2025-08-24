@@ -12,7 +12,7 @@ Start by building a simple FM receiver flow graph following this tutorial [RTL-S
 
 Alternatively you can download the GRC file directly from 
 ```bash
-wget https://raw.githubusercontent.com/StudHamza/GNU-Radio-FM-App/main/src/fm_receiver/flowgraphs/rds_rx.grc
+wget https://raw.githubusercontent.com/StudHamza/GNU-Radio-FM-App/main/src/fm_receiver/flowgraphs/fm_receiver.grc
 ```
 
 ![Simple Receiver Flow Graph](img/simple_fm.png)
@@ -112,6 +112,7 @@ The parameter `top_block_clls=simple_fm_receiver` is your flow graph, which inhe
 
 Create a new python virtual environment make sure to include system packages so that your code can find GNU Radio.
 
+**Note**: Make sure to include system packages so that your interpreter can find the GNU Radio library 
 ``` bash
 # Create environment
 python -m venv .venv --system-site-packages

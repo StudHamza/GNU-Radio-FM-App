@@ -695,6 +695,23 @@ blocks:
     coordinate: [1280, 1148.0]
     rotation: 180
     state: true
+- name: device_arguments
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: device_arguments
+    short_id: ''
+    type: str
+    value: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [952, 132.0]
+    rotation: 0
+    state: true
 - name: digital_constellation_receiver_cb_0
   id: digital_constellation_receiver_cb
   parameters:
@@ -1711,7 +1728,7 @@ blocks:
     ant7: ''
     ant8: ''
     ant9: ''
-    args: f"rtl={serial}"
+    args: device_arguments
     bb_gain0: '20'
     bb_gain1: '20'
     bb_gain10: '20'
@@ -2031,23 +2048,6 @@ blocks:
     coordinate: [16, 340.0]
     rotation: 0
     state: enabled
-- name: serial
-  id: parameter
-  parameters:
-    alias: ''
-    comment: ''
-    hide: none
-    label: serial
-    short_id: ''
-    type: ''
-    value: '0'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [952, 132.0]
-    rotation: 0
-    state: true
 - name: uhd_usrp_source_0
   id: uhd_usrp_source
   parameters:
