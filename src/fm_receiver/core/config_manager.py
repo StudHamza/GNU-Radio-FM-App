@@ -69,5 +69,5 @@ class ConfigManager:
         return {
             "stations": [88.7e6],
             "volume": 0,
-            "outdir":os.path.join((os.getcwd()),"downloads")
+            "outdir":None,
         }

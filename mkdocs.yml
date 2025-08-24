@@ -1,5 +1,6 @@
 site_name: FM Receiver
 nav:
   - Home: index.md
+  - Tutorials: tutorials.md
   - About: about.md  
 theme: readthedocs

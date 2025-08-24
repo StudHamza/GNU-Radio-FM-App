@@ -532,7 +532,7 @@ class MainWindow(QMainWindow):
         self.scan_btn_home.setDisabled(False)
         self.mute_button.setDisabled(False)
 
-        self.switch_page(self.home_button)
+        self.home_button.click()
         self.set_freq(self.stations[0])
 
 
@@ -584,6 +584,7 @@ class MainWindow(QMainWindow):
         
         Removes the clicked station from the station list and redisplays the list
         """
+        self.stop_all_recordings()
         button:StationButton = self.sender()
         self.stations.remove(button.get_freq())
         self.update_display()
@@ -696,6 +697,16 @@ class MainWindow(QMainWindow):
         configured output directory. Updates button text to reflect current
         recording state and manages the GNU Radio WAV file sink.
         """
+        # Make sure save directory exists
+        if self.outdir is None:
+            x = self.save_file()
+
+            if x is False:
+                self.info = InfoWindow("Choose Record Directory",2000)
+                self.info.show()
+                return
+
+
         if self.recording is False:
             self.recording = True
             self.record_btn.setText("Recording")
@@ -725,6 +736,15 @@ class MainWindow(QMainWindow):
             - Updates the button's state to "not recording".
         4. Restarts the FM receiver flowgraph after changes.
         """
+
+        # Make sure save directory exists
+        if self.outdir is None:
+            x = self.save_file()
+
+            if x is False:
+                self.info = InfoWindow("Choose Record Directory",2000)
+                self.info.show()
+                return
 
         # Identify which station button triggered the function
         button: StationButton = self.sender()
@@ -851,14 +871,12 @@ class MainWindow(QMainWindow):
                 timeout=2000
             )
             self.info.show()
-            
+
             logger.info(f"Stopped {len(recorders_to_stop)} recordings")
         else:
             logger.info("No active recordings to stop")
-        
+
         return
-
-
 
     def save_file(self):
         """Open directory selection dialog for recording output.
@@ -872,8 +890,10 @@ class MainWindow(QMainWindow):
         if dir_path:
             self.outdir = dir_path
             logger.info(f"Output directory set to: {self.outdir}")
+            return True
         else:
             QMessageBox.information(self, "No Directory Selected", "Output directory was not set.")
+            return False
 
     def load_config(self):
         """Load application configuration from persistent storage.
@@ -884,8 +904,8 @@ class MainWindow(QMainWindow):
         """
         self.stations = self.config_manager.get('stations')
         self.volume = self.config_manager.get('volume')
-        #self.outdir = self.config_manager.get('outdir')
-        self.outdir = os.path.join((os.getcwd()),"downloads")
+        self.outdir = self.config_manager.get('outdir')
+        # self.outdir = os.path.join((os.getcwd()),"downloads")
 
     def _init_receiver(self):
         """Initialize GNU Radio receiver with current settings.
