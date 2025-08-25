@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Scanner - FM Receiver</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Scanner";
+        var mkdocs_page_input_path = "scanner.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> FM Receiver
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../tutorials/">Tutorials</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Scanner</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overall-architecture">Overall Architecture</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#main-scanner-flow-fm_scannerpy">Main Scanner Flow (fm_scanner.py)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-signal-acquisition">1. Signal Acquisition</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-data-limiting">2. Data Limiting</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-fft-processing">3. FFT Processing</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-power-calculation">4. Power Calculation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#station-detection-logic-rds_rx_epy_block_0py">Station Detection Logic (rds_rx_epy_block_0.py)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-initialization-parameters">1. Initialization Parameters</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-frequency-grid-calculation">2. Frequency Grid Calculation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-power-accumulation">3. Power Accumulation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-station-detection-algorithm">4. Station Detection Algorithm</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-adjacent-channel-grouping">5. Adjacent Channel Grouping</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#6-peak-selection">6. Peak Selection</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#key-design-features">Key Design Features</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#limitations-observations">Limitations &amp; Observations</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../about/">About</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">FM Receiver</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Scanner</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="fm-scanner">FM Scanner</h1>
+<p>The scanner block processes incoming complex baseband samples in real time and performs spectrum analysis to detect active signals. Internally, it applies an FFT over a configurable window size to transform the samples into the frequency domain, computes the power in each frequency bin, and compares the results against detection thresholds to identify occupied channels. Users can configure parameters such as FFT size, sample rate, and center frequency to match their application needs. The block outputs information about detected signals, enabling downstream components to react to spectrum activity.</p>
+<h2 id="overall-architecture">Overall Architecture</h2>
+<p>The system consists of two main components:
+1. <strong>fm_scanner.py</strong> - The main GNU Radio flowgraph that handles RF signal acquisition and processing
+2. <strong>rds_rx_epy_block_0.py</strong> - An embedded Python block that performs station detection logic</p>
+<h2 id="main-scanner-flow-fm_scannerpy">Main Scanner Flow (fm_scanner.py)</h2>
+<p>The signal processing pipeline works as follows:</p>
+<h3 id="1-signal-acquisition">1. <strong>Signal Acquisition</strong></h3>
+<pre><code class="language-python">self.soapy_rtlsdr_source_0 = soapy.source(dev, &quot;fc32&quot;, 1, 'True', ...)
+</code></pre>
+<ul>
+<li>Uses an RTL-SDR dongle to capture RF signals</li>
+<li>Samples at 2.048 MHz sample rate</li>
+<li>Initially tunes to 87 MHz (start of FM band)</li>
+<li>Captures complex IQ samples</li>
+</ul>
+<h3 id="2-data-limiting">2. <strong>Data Limiting</strong></h3>
+<pre><code class="language-python">self.blocks_head_0 = blocks.head(gr.sizeof_gr_complex*1, num_items)
+</code></pre>
+<ul>
+<li>Limits capture to <code>num_items = samp_rate * 2</code> samples (about 2 seconds of data)</li>
+</ul>
+<h3 id="3-fft-processing">3. <strong>FFT Processing</strong></h3>
+<pre><code class="language-python">self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, fft_size)
+self.fft_vxx_0 = fft.fft_vcc(fft_size, True, window.blackmanharris(fft_size), True, 1)
+</code></pre>
+<ul>
+<li>Converts stream to vectors of size 128 (2^7)</li>
+<li>Performs FFT with Blackman-Harris windowing</li>
+<li>This converts time-domain samples to frequency domain</li>
+</ul>
+<h3 id="4-power-calculation">4. <strong>Power Calculation</strong></h3>
+<pre><code class="language-python">self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(fft_size)
+</code></pre>
+<ul>
+<li>Converts complex FFT output to power spectral density</li>
+<li>Results in magnitude-squared values representing signal power at each frequency bin</li>
+</ul>
+<h2 id="station-detection-logic-rds_rx_epy_block_0py">Station Detection Logic (rds_rx_epy_block_0.py)</h2>
+<p>This is where the intelligence happens:</p>
+<h3 id="1-initialization-parameters">1. <strong>Initialization Parameters</strong></h3>
+<ul>
+<li><code>fft_size = 128</code>: Frequency resolution</li>
+<li><code>samp_rate = 2.048e6</code>: Sample rate  </li>
+<li><code>freq = 88e6</code>: Center frequency (88 MHz)</li>
+<li><code>threshold = 0.3</code>: Detection threshold (30%)</li>
+</ul>
+<h3 id="2-frequency-grid-calculation">2. <strong>Frequency Grid Calculation</strong></h3>
+<pre><code class="language-python">def compute_candidate_freqs(self):
+    step_size = 100e3  # 100 kHz steps
+    start_freq = self.round_to_3_sigfigs(self.freq - self.fft_size * (self.samp_rate / self.fft_size) / 2)
+    end_freq = self.round_to_3_sigfigs(self.freq + self.fft_size * (self.samp_rate / self.fft_size) / 2)
+    self.candidate_freqs = np.arange(start_freq, end_freq, step_size)
+</code></pre>
+<p>This creates a grid of candidate station frequencies:
+- Covers the bandwidth visible in the current FFT window
+- Uses 100 kHz spacing (typical FM channel spacing in many regions)
+- Maps frequencies to corresponding FFT bins</p>
+<h3 id="3-power-accumulation">3. <strong>Power Accumulation</strong></h3>
+<pre><code class="language-python">for j, station_bin in enumerate(self.candidate_freqs_bin):
+    start_bin = int(station_bin - self.half_station_size)
+    end_bin = int(station_bin + self.half_station_size)
+    potential_station = np.sum(np.abs(data_chunk[start_bin:end_bin])**2)
+    self.power_per_station[j] += potential_station
+</code></pre>
+<p>For each candidate frequency:
+- Calculates which FFT bins correspond to that station
+- Uses <code>half_station_size</code> based on FM bandwidth (200 kHz)
+- Sums power across multiple FFT bins for each potential station
+- Accumulates power over multiple FFT frames for better statistics</p>
+<h3 id="4-station-detection-algorithm">4. <strong>Station Detection Algorithm</strong></h3>
+<pre><code class="language-python">normalized_power_per_station = self.normalize(self.power_per_station)
+active_indices = np.where(normalized_power_per_station &gt; self.threshold)[0]
+</code></pre>
+<ul>
+<li>Normalizes power measurements to 0-1 range</li>
+<li>Identifies candidates above 30% threshold</li>
+</ul>
+<h3 id="5-adjacent-channel-grouping">5. <strong>Adjacent Channel Grouping</strong></h3>
+<pre><code class="language-python"># Group adjacent active indices
+groups = []
+if len(active_indices) &gt; 0:
+    group = [active_indices[0]]
+    for idx in active_indices[1:]:
+        if idx == group[-1] + 1:
+            group.append(idx)
+        else:
+            groups.append(group)
+            group = [idx]
+</code></pre>
+<p>This clever algorithm:
+- Groups adjacent frequency bins that are above threshold
+- Prevents detecting the same station multiple times
+- Accounts for FM signals spreading across multiple 100kHz channels</p>
+<h3 id="6-peak-selection">6. <strong>Peak Selection</strong></h3>
+<pre><code class="language-python">for group in groups:
+    max_idx = group[np.argmax(normalized_power_per_station[group])]
+    self.detected_stations.add(float(self.candidate_freqs[max_idx]))
+</code></pre>
+<ul>
+<li>For each group of adjacent active channels</li>
+<li>Selects the frequency with maximum power as the actual station frequency</li>
+</ul>
+<h2 id="key-design-features">Key Design Features</h2>
+<ol>
+<li><strong>Frequency Resolution</strong>: With 128-point FFT and 2.048 MHz sample rate, each bin represents ~16 kHz</li>
+<li><strong>Station Bandwidth</strong>: Assumes 200 kHz FM bandwidth, covering multiple FFT bins per station</li>
+<li><strong>Robust Detection</strong>: Uses power accumulation over time and adjacent channel grouping</li>
+<li><strong>Threshold-based</strong>: Only reports stations above 30% of the maximum detected power</li>
+</ol>
+<h2 id="limitations-observations">Limitations &amp; Observations</h2>
+<ol>
+<li><strong>Fixed Frequency</strong>: Currently only scans around 88 MHz - would need frequency hopping for full FM band</li>
+<li><strong>Single Capture</strong>: Takes one 2-second snapshot rather than continuous scanning</li>
+<li><strong>Simple Threshold</strong>: Uses basic power thresholding rather than more sophisticated detection algorithms</li>
+</ol>
+<p>This is a solid foundation for an FM scanner that could be extended to sweep the entire FM band (88-108 MHz) by iterating through different center frequencies.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../tutorials/" class="btn btn-neutral float-left" title="Tutorials"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../about/" class="btn btn-neutral float-right" title="About">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../tutorials/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../about/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
