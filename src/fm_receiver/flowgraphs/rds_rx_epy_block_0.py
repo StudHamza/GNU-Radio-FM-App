@@ -1,9 +1,73 @@
 """
-Embedded Python Blocks:
+FM Station Detector - GNU Radio Embedded Python Block
 
-Each time this file is saved, GRC will instantiate the first class it finds
-to get ports and parameters of your block. The arguments to __init__  will
-be the parameters. All of them are required to have default values!
+This block performs automated FM radio station detection by analyzing power spectral 
+density data from an FFT-processed RF signal. It identifies active FM broadcast 
+stations within the current frequency window and outputs their center frequencies.
+
+Algorithm Overview:
+1. Accumulates power measurements across multiple FFT frames for statistical reliability
+2. Creates a frequency grid of candidate FM stations spaced 100 kHz apart
+3. For each candidate frequency, sums power across FM bandwidth (~200 kHz)
+4. Applies threshold-based detection (30% of peak power) to identify active stations
+5. Groups adjacent active frequencies to prevent multiple detections of same station
+6. Selects peak power frequency within each group as the final station frequency
+
+Parameters:
+    fft_size (int): FFT size for frequency resolution (default: 128)
+        - Determines frequency bin width: samp_rate / fft_size
+        - Larger values provide better frequency resolution but slower processing
+    
+    samp_rate (float): Sample rate in Hz (default: 2.048e6)
+        - Must match the sample rate of input signal
+        - Determines the frequency span analyzed: [-samp_rate/2, +samp_rate/2] around center
+    
+    freq (float): Center frequency in Hz (default: 88e6)
+        - The RF center frequency being analyzed
+        - Used to calculate absolute frequencies of detected stations
+    
+    done (int): Processing state flag (default: 0)
+        - 0: Continue processing
+        - 1: Processing complete, block becomes pass-through
+
+Input:
+    - Single input stream of float32 power spectral density values
+    - Expected to be magnitude-squared FFT output (power per frequency bin)
+    - Requires approximately samp_rate * 2 samples for reliable detection
+
+Output:
+    - No streaming output (out_sig=None)
+    - Message port "done": Sends completion signal when detection is finished
+    - Detected stations accessible via get_stations() method
+
+Key Features:
+    - Robust detection using power accumulation over ~2 seconds of data
+    - Adjacent channel grouping prevents duplicate station detection
+    - Configurable detection threshold for different sensitivity requirements
+    - Automatic frequency-to-bin mapping handles arbitrary center frequencies
+    - Memory efficient: processes data in chunks and clears buffers when complete
+
+Usage Notes:
+    - Designed for FM broadcast band (typically 88-108 MHz)
+    - Station spacing assumes 100 kHz channel separation (adjust step_size if needed)
+    - FM bandwidth assumption of 200 kHz works for most regions
+    - For full-band scanning, use multiple instances with different center frequencies
+    - Detection threshold (0.3) may need adjustment based on local signal environment
+
+Example Integration:
+    This block is typically placed after an FFT block and complex-to-mag-squared block
+    in a GNU Radio flowgraph. Connect the power spectral density output directly to
+    this block's input. Monitor the "done" message port to know when detection is complete,
+    then call get_stations() to retrieve the list of detected station frequencies.
+
+Performance:
+    - Processing time: ~2 seconds of RF data capture + computation time
+    - Memory usage: Minimal, processes data in FFT-sized chunks
+    - Frequency accuracy: Limited by FFT bin width (~16 kHz for default parameters)
+
+Author: hamza
+Version: 1.0
+Compatible with: GNU Radio 3.8+
 """
 
 import numpy as np
