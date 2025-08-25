@@ -66,10 +66,6 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#disconnecting-and-connecting-blocks">Disconnecting and Connecting Blocks</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#parameters">Parameters</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#rds-integration">RDS Integration</a>
-    </li>
         </ul>
     </li>
     </ul>
@@ -109,7 +105,7 @@
 <h3 id="create-your-flow-graph">Create Your Flow graph</h3>
 <p>Start by building a simple FM receiver flow graph following this tutorial <a href="https://wiki.gnuradio.org/index.php?title=RTL-SDR_FM_Receiver">RTL-SDR FM Receiver tutorial</a>. </p>
 <p>Alternatively you can download the GRC file directly from </p>
-<pre><code class="language-bash">wget https://raw.githubusercontent.com/StudHamza/GNU-Radio-FM-App/main/src/fm_receiver/flowgraphs/rds_rx.grc
+<pre><code class="language-bash">wget https://raw.githubusercontent.com/StudHamza/GNU-Radio-FM-App/main/src/fm_receiver/flowgraphs/fm_receiver.grc
 </code></pre>
 <p><img alt="Simple Receiver Flow Graph" src="../img/simple_fm.png" /></p>
 <p>Run the file using GNU Radio Companion, and open the generated python file.</p>
@@ -199,6 +195,7 @@ if __name__ == '__main__':
 </ol>
 <h3 id="your-application">Your application</h3>
 <p>Create a new python virtual environment make sure to include system packages so that your code can find GNU Radio.</p>
+<p><strong>Note</strong>: Make sure to include system packages so that your interpreter can find the GNU Radio library </p>
 <pre><code class="language-bash"># Create environment
 python -m venv .venv --system-site-packages
 
@@ -213,7 +210,7 @@ source .venv/bin/activate
 <pre><code class="language-python">import sys
 from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QVBoxLayout
 # First Import your flowgraph
-from yourdirectory.simple_fm import simple_fm
+from fm_receiver import fm_receiver
 
 class FM(QWidget):
     def __init__(self):
@@ -221,10 +218,11 @@ class FM(QWidget):
         self.setWindowTitle(&quot;PyQt5 Simple FM Example&quot;)
 
         # Instantiate FM Receiver App
-        self.tb = simple_fm()
+        self.tb = fm_receiver()
+        self.setMinimumSize(700, 500)
 
         # State variable
-        self.listening = False  
+        self.listening = False 
 
         # Layout
         layout = QVBoxLayout()
@@ -256,7 +254,6 @@ if __name__ == &quot;__main__&quot;:
     window = FM()
     window.show()
     sys.exit(app.exec_())
-
 </code></pre>
 <p>The first step is to import your flowgraph and instantiate it in the init of your application in order to control it from anywhere.</p>
 <pre><code class="language-python">from yourdirectory.simple_fm import simple_fm
@@ -289,49 +286,123 @@ self.tb = simple_fm()
 <ol>
 <li>Variable Control </li>
 <li>Use GRC GUI elements in your python application</li>
-<li>Using paramters for your flowgraph</li>
+<li>Using parameters for your flowgraph</li>
 <li>Advance control over blocks, by disconnecting and reconnecting blocks</li>
 </ol>
 <h3 id="setting-variables">Setting Variables</h3>
-<h3 id="using-gui-blocks">Using GUI Blocks</h3>
-<h3 id="disconnecting-and-connecting-blocks">Disconnecting and Connecting Blocks</h3>
-<h3 id="parameters">Parameters</h3>
-<h3 id="rds-integration">RDS Integration</h3>
-<p>In my case, the <code>rds_rx.py</code> runs this code to instantiate an object of our flow graph.</p>
-<pre><code class="language-python">def main(top_block_cls=rds_rx, options=None):
-    if options is None:
-        options = argument_parser().parse_args()
-
-    if StrictVersion(&quot;4.5.0&quot;) &lt;= StrictVersion(Qt.qVersion()) &lt; StrictVersion(&quot;5.0.0&quot;):
-        style = gr.prefs().get_string('qtgui', 'style', 'raster')
-        Qt.QApplication.setGraphicsSystem(style)
-    qapp = Qt.QApplication(sys.argv)
-
-    tb = top_block_cls()
-
-    tb.start()
-
-    tb.show()
-
-    def sig_handler(sig=None, frame=None):
-        tb.stop()
-        tb.wait()
-
-        Qt.QApplication.quit()
-
-    signal.signal(signal.SIGINT, sig_handler)
-    signal.signal(signal.SIGTERM, sig_handler)
-
-    timer = Qt.QTimer()
-    timer.start(500)
-    timer.timeout.connect(lambda: None)
-
-    qapp.exec_()
-
-if __name__ == '__main__':
-    main()
+<p>If you click the on the listen button there is a big possibility that you'll hear some noise. In order to listen to an actual station you need to be able to tune to a specific center frequency. Looking at the python generated file, you'll find at the very bottom some getters and setters:</p>
+<pre><code class="language-python">    def set_freq(self, freq):
+        self.freq = freq
+        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate)
+        self.qtgui_waterfall_sink_x_0.set_frequency_range(self.freq, self.samp_rate)
+        self.soapy_rtlsdr_source_0.set_frequency(0, self.freq)
 </code></pre>
-<p>As you can see there are three main functions to </p>
+<p>So in order to set frequency, you need to tie this method to a GUI element in your application. You can get as create as you want with the widget, but for the sake of simplicity lets use <code>QSlider</code>.</p>
+<p>Add a Slider widget along with a function to handle changing the frequency.</p>
+<pre><code class="language-python">        # Frequency Label
+        self.freq_label = QLabel(&quot;Frequency: 100 MHz&quot;)
+        layout.addWidget(self.freq_label)
+
+        # Frequency Slider
+        self.freq_slider = QSlider(Qt.Horizontal)
+        self.freq_slider.setMinimum(88000000)   # 88 MHz
+        self.freq_slider.setMaximum(108000000)  # 108 MHz
+        self.freq_slider.setValue(int(self.tb.get_freq()))    # Default 100 MHz        
+        self.freq_slider.setTickInterval(int(1e6))  # 1 mhz step
+        self.freq_slider.setSingleStep(100000)
+        self.freq_slider.valueChanged.connect(self.change_frequency)
+        layout.addWidget(self.freq_slider)
+</code></pre>
+<pre><code class="language-python">    def change_frequency(self, freq):
+        &quot;&quot;&quot;Update FM receiver frequency from slider.&quot;&quot;&quot;
+        self.tb.set_freq(freq)
+        self.freq_label.setText(f&quot;Frequency: {freq/1e6:.1f} MHz&quot;)
+        print(f&quot;Frequency set to {freq/1e6:.1f} MHz&quot;)
+</code></pre>
+<p>We've used the <code>get_freq()</code> method to set the default value of the slider just as the current frequency of our receiver. And used the <code>set_freq()</code> method to edit the SDRs center frequency and listen t0 multiple stations.</p>
+<h3 id="using-gui-blocks">Using GUI Blocks</h3>
+<p>To tune into stations, we can look for peaks in the frequency-domain view of our signal. GNU Radio’s QT Frequency Sink makes this easy by showing the signal spectrum in real time.</p>
+<p>When you generate your flowgraph, check the Python file: GUI elements are added to the QT layout with addWidget(). The variables passed here (usually ending in _win) are the widget objects you can embed directly into your application.</p>
+<pre><code class="language-python">        self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
+</code></pre>
+<h3 id="disconnecting-and-connecting-blocks">Disconnecting and Connecting Blocks</h3>
+<p>Suppose you want to record a specific stream only when triggered by a button press. Fortunately, GNU Radio allows you to control your flowgraph programmatically from within your Python application. This means you can dynamically connect and disconnect blocks as needed.</p>
+<p>In this example, we’ll demonstrate how to connect an audio sink to an FM decoder when the recording action is triggered.</p>
+<p>You can approach this in two ways:</p>
+<ol>
+<li>
+<p>Create the block directly in Python by checking the block’s constructor (from API refernce) and instantiating it in your code.</p>
+</li>
+<li>
+<p>(My Way) Add the block to your GNU Radio flowgraph in the Companion (GRC), then generate the Python code. By reviewing the generated code, you can see exactly how the block is constructed and how the connections are defined. This method makes it easier to understand the correct parameters and wiring before you replicate it programmatically.</p>
+</li>
+</ol>
+<p>After Adding the block to the flowgraph, here is the python code for the wave file sink block:</p>
+<pre><code class="language-python">from gnuradio import audio
+.
+.
+.
+        self.blocks_wavfile_sink_0 = blocks.wavfile_sink(
+            'filename',
+            1,
+            samp_rate,
+            blocks.FORMAT_WAV,
+            blocks.FORMAT_PCM_16,
+            False
+            )
+    ##################################################
+    # Connections
+    ##################################################
+        self.connect((self.analog_wfm_rcv_0, 0), (self.blocks_wavfile_sink_0, 0))
+</code></pre>
+<p>So lets get back to our application and create a button to trigger recording in a specific file.</p>
+<p>The first step is to initialize the block:</p>
+<pre><code class="language-python">from gnuradio import blocks
+
+# Initialize wavfile sink (but don't connect yet)
+self.recorder = blocks.wavfile_sink(
+    'recording.wav',        # Output file
+    1,                      # Number of channels
+    int(self.tb.samp_rate), # Match sample rate of your flowgraph
+    blocks.FORMAT_WAV,
+    blocks.FORMAT_PCM_16,
+    False
+)
+</code></pre>
+<p>Then add record button</p>
+<pre><code class="language-python"># Record button
+self.recording = False
+self.record_button = QPushButton(&quot;Start Recording&quot;)
+self.record_button.clicked.connect(self.toggle_recording)
+layout.addWidget(self.record_button)
+</code></pre>
+<p>Finaly create a function to toggle recording and stopping:</p>
+<pre><code class="language-python">def toggle_recording(self):
+    &quot;&quot;&quot;Toggle audio recording by connecting/disconnecting wavfile_sink.&quot;&quot;&quot;
+    self.recording = not self.recording
+
+    if self.recording:
+        self.record_button.setText(&quot;Stop Recording&quot;)
+        print(&quot;Recording started...&quot;)
+
+        # Dynamically connect FM decoder to wavfile sink
+        self.tb.lock()  # Lock flowgraph before modifying
+        self.tb.connect((self.tb.analog_wfm_rcv_0, 0), (self.recorder, 0))
+        self.tb.unlock()
+    else:
+        self.record_button.setText(&quot;Start Recording&quot;)
+        print(&quot;Recording stopped.&quot;)
+
+        # Disconnect wavfile sink
+        self.tb.lock()
+        try:
+            self.tb.disconnect((self.tb.analog_wfm_rcv_0, 0), (self.recorder, 0))
+        except Exception as e:
+            print(&quot;Already disconnected:&quot;, e)
+        self.tb.unlock()
+</code></pre>
+<p>Important: The lock() / unlock() calls are necessary when modifying connections in a running GNU Radio flowgraph to avoid race conditions.</p>
               
             </div>
           </div><footer>
