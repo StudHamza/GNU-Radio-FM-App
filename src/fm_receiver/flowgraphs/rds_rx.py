@@ -38,10 +38,9 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+from gnuradio import soapy
 from gnuradio.qtgui import Range, RangeWidget
 from PyQt5 import QtCore
-import osmosdr
-import time
 import rds
 import rds_rx_epy_block_0 as epy_block_0  # embedded python block
 
@@ -120,13 +119,6 @@ class rds_rx(gr.top_block, Qt.QWidget):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
-        self._gain_range = Range(0, 49.6, 1, 40, 200)
-        self._gain_win = RangeWidget(self._gain_range, self.set_gain, "RF Gain", "counter_slider", float, QtCore.Qt.Horizontal)
-        self.top_grid_layout.addWidget(self._gain_win, 2, 0, 1, 1)
-        for r in range(2, 3):
-            self.top_grid_layout.setRowStretch(r, 1)
-        for c in range(0, 1):
-            self.top_grid_layout.setColumnStretch(c, 1)
         self._freq_range = Range(77, 108, 0.1, 88.7, 200)
         self._freq_win = RangeWidget(self._freq_range, self.set_freq, "Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_grid_layout.addWidget(self._freq_win, 0, 0, 1, 1)
@@ -140,21 +132,24 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self._fir_cutoff_range = Range(20e3, 200e3, 1e3, 135e3, 200)
         self._fir_cutoff_win = RangeWidget(self._fir_cutoff_range, self.set_fir_cutoff, "Cutoff Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._fir_cutoff_win)
-        self.rtlsdr_source_0_0 = osmosdr.source(
-            args="numchan=" + str(1) + " " + device_arguments
-        )
-        self.rtlsdr_source_0_0.set_time_unknown_pps(osmosdr.time_spec_t())
-        self.rtlsdr_source_0_0.set_sample_rate(samp_rate)
-        self.rtlsdr_source_0_0.set_center_freq(freq_tune, 0)
-        self.rtlsdr_source_0_0.set_freq_corr(0, 0)
-        self.rtlsdr_source_0_0.set_dc_offset_mode(0, 0)
-        self.rtlsdr_source_0_0.set_iq_balance_mode(0, 0)
-        self.rtlsdr_source_0_0.set_gain_mode(False, 0)
-        self.rtlsdr_source_0_0.set_gain(gain, 0)
-        self.rtlsdr_source_0_0.set_if_gain(20, 0)
-        self.rtlsdr_source_0_0.set_bb_gain(20, 0)
-        self.rtlsdr_source_0_0.set_antenna('', 0)
-        self.rtlsdr_source_0_0.set_bandwidth(0, 0)
+        self.soapy_custom_source_0 = None
+        dev = 'driver=' + ''
+        stream_args = ''
+        tune_args = ['']
+        settings = ['']
+        self.soapy_custom_source_0 = soapy.source(dev, "fc32",
+                                  1, device_arguments,
+                                  stream_args, tune_args, settings)
+        self.soapy_custom_source_0.set_sample_rate(0, samp_rate)
+        self.soapy_custom_source_0.set_bandwidth(0, 0)
+        self.soapy_custom_source_0.set_antenna(0, 'RX')
+        self.soapy_custom_source_0.set_frequency(0, freq_tune)
+        self.soapy_custom_source_0.set_frequency_correction(0, 0)
+        self.soapy_custom_source_0.set_gain_mode(0, False)
+        self.soapy_custom_source_0.set_gain(0, 10)
+        self.soapy_custom_source_0.set_dc_offset_mode(0, False)
+        self.soapy_custom_source_0.set_dc_offset(0, 0)
+        self.soapy_custom_source_0.set_iq_balance(0, 0)
         self.rds_parser_0 = rds.parser(False, False, 0)
         self.rds_panel_0_0 = rds.rdsPanel(freq)
         self._rds_panel_0_0_win = self.rds_panel_0_0
@@ -443,6 +438,13 @@ class rds_rx(gr.top_block, Qt.QWidget):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
+        self._gain_range = Range(0, 49.6, 1, 40, 200)
+        self._gain_win = RangeWidget(self._gain_range, self.set_gain, "RF Gain", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_grid_layout.addWidget(self._gain_win, 2, 0, 1, 1)
+        for r in range(2, 3):
+            self.top_grid_layout.setRowStretch(r, 1)
+        for c in range(0, 1):
+            self.top_grid_layout.setColumnStretch(c, 1)
         self.freq_xlating_fir_filter_xxx_1_0 = filter.freq_xlating_fir_filter_fcc(10, firdes.low_pass(1.0, samp_rate / decimation, 7.5e3, 5e3), 57e3, samp_rate / decimation)
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(decimation, firdes.low_pass(1, samp_rate, fir_cutoff, fir_transition_width), freq_offset, samp_rate)
         self.fir_filter_xxx_2 = filter.fir_filter_ccc(1, rrc_taps_manchester)
@@ -535,9 +537,9 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.analog_fm_deemph_0_0, 0))
         self.connect((self.blocks_vector_to_stream_0, 0), (self.epy_block_0, 0))
-        self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
         self.connect((self.digital_constellation_receiver_cb_0, 2), (self.blocks_null_sink_0, 1))
         self.connect((self.digital_constellation_receiver_cb_0, 1), (self.blocks_null_sink_0, 0))
+        self.connect((self.digital_constellation_receiver_cb_0, 3), (self.blocks_null_sink_0, 2))
         self.connect((self.digital_constellation_receiver_cb_0, 0), (self.digital_diff_decoder_bb_0, 0))
         self.connect((self.digital_constellation_receiver_cb_0, 4), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.digital_diff_decoder_bb_0, 0), (self.rds_decoder_0, 0))
@@ -556,7 +558,7 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.connect((self.rational_resampler_xxx_0, 0), (self.blocks_delay_0, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.fir_filter_xxx_0, 0))
         self.connect((self.rational_resampler_xxx_1, 0), (self.fir_filter_xxx_2, 0))
-        self.connect((self.rtlsdr_source_0_0, 0), (self.blocks_selector_0, 0))
+        self.connect((self.soapy_custom_source_0, 0), (self.blocks_selector_0, 0))
 
 
     def closeEvent(self, event):
@@ -588,7 +590,6 @@ class rds_rx(gr.top_block, Qt.QWidget):
         self.qtgui_freq_sink_x_1_0.set_frequency_range(self.freq, self.samp_rate / (self.decimation*5))
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
         self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
-        self.rtlsdr_source_0_0.set_sample_rate(self.samp_rate)
 
     def get_rrc_taps(self):
         return self.rrc_taps
@@ -680,14 +681,13 @@ class rds_rx(gr.top_block, Qt.QWidget):
 
     def set_gain(self, gain):
         self.gain = gain
-        self.rtlsdr_source_0_0.set_gain(self.gain, 0)
 
     def get_freq_tune(self):
         return self.freq_tune
 
     def set_freq_tune(self, freq_tune):
         self.freq_tune = freq_tune
-        self.rtlsdr_source_0_0.set_center_freq(self.freq_tune, 0)
+        self.soapy_custom_source_0.set_frequency(0, self.freq_tune)
 
     def get_fir_transition_width(self):
         return self.fir_transition_width

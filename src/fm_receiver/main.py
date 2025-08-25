@@ -44,7 +44,7 @@ def main():
     # If accepted, launch main app
     sdr_serial = config_dialog.get_selected_device()['serial']
     sdr_driver = config_dialog.get_selected_device()['driver']
-    sdr_device = f"{sdr_driver}={sdr_serial}"
+    sdr_device = f"driver={sdr_driver},serial={sdr_serial}"
 
     fm_app = FMReceiverApp(config_path=args.config,selected_device=sdr_device)
     fm_app.show()
