@@ -3,4 +3,10 @@ nav:
   - Home: index.md
   - Tutorials: tutorials.md
   - About: about.md  
+  # - Installation: installation.md
+  # - Getting Started: getting-started.md
+  # - Functions:
+  #     - Overview: functions/index.md
+  # - Troubleshooting: troubleshooting.md
+  # - FAQ: faq.md
 theme: readthedocs
